@@ -90,11 +90,11 @@ instances=${instances}' '${OUTPUT}
 
 # Run all the configurations on all instances
 function runComplete {
-  ./bin/completeSearch $1 $2 $3 $4 $5 $6 | tail -n -2 > ${outdir}/$1
+  ./bin/completeSearch $2 $3 $4 $5 $6 $7 | tail -n -2 > ${1}/$5$6$7$(basename $2)
 }
 
 export -f runComplete
 
-parallel -j ${THREADS} runComplete ::: ${instances} ::: ${TIMEOUT} ::: o ::: f t ::: f t ::: f t
+parallel -j ${THREADS} runComplete ${outdir} ::: ${instances} ::: ${TIMEOUT} ::: o ::: f t ::: f t ::: f t
 
 rm -rf $dir

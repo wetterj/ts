@@ -1,7 +1,7 @@
 #! /usr/bin/python
 
-import instance_pb2
 import sys
+import instance_pb2
 import random
 
 if len(sys.argv) != 16:
