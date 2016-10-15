@@ -59,8 +59,9 @@ int main(int argc,char **argv) {
 
   while(solver.NextSolution()) {
     auto now = high_resolution_clock::now();
-    cout << "t: " << duration_cast<microseconds>(now - start).count() / 1000000.f << endl;
-    cout << "q: " << schedule.getQuality()->Value() << endl;
+    cout << "time: " << duration_cast<microseconds>(now - start).count() / 1000000.f << endl;
+    cout << "branches: " << solver.branches() << endl;
+    cout << "quality: " << schedule.getQuality()->Value() << endl;
   }
 
   delete db;
