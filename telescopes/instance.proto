@@ -1,0 +1,15 @@
+syntax = "proto3";
+
+message InstanceProto {
+  int32 nTelescopes        = 1;
+  int32 nTargets           = 2;
+  int32 nSlots             = 3;
+  int32 horizon            = 4;
+  int32 balanceNumerator   = 5;
+  int32 balanceDenominator = 6;
+  repeated int32 gain      = 7;
+  repeated int32 cadence   = 8;
+  repeated int32 period    = 9;
+  repeated int32 visFrom   = 10;
+  repeated int32 visTo     = 11;
+}

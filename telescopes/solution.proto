@@ -1,0 +1,8 @@
+syntax = "proto3";
+
+message SolutionProto {
+  int32 quality = 1;
+  repeated int32 target = 2;
+  repeated int32 time   = 3;
+  repeated int32 contribution = 4;
+}
