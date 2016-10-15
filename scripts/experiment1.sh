@@ -90,7 +90,7 @@ instances=${instances}' '${OUTPUT}
 
 # Run all the configurations on all instances
 function runComplete {
-  ./bin/completeSearch $2 $3 $4 $5 $6 $7 | tail -n -2 > ${1}/$5$6$7$(basename $2)
+  ./bin/completeSearch $2 $3 $4 $5 $6 $7 | tail -n -3 > ${1}/$5$6$7$(basename $2)
 }
 
 export -f runComplete
