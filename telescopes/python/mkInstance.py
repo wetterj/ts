@@ -4,29 +4,31 @@ import instance_pb2
 import sys
 import random
 
-if len(sys.argv) != 15:
-  print 'usage:  <script> nTelescopes nTargets horizon minGain maxGain minCadence maxCadence minPeriod maxPeriod percentVis visSize balanceNumerator balanceDenominator output'
+if len(sys.argv) != 16:
+  print 'usage:  <script> seed nTelescopes nTargets horizon minGain maxGain minCadence maxCadence minPeriod maxPeriod percentVis visSize balanceNumerator balanceDenominator output'
   sys.exit(1)
 
+random.seed(int(sys.argv[1]))
+
 inst = instance_pb2.InstanceProto()
-inst.nTelescopes = int(sys.argv[1])
-inst.nTargets = int(sys.argv[2])
-inst.horizon = int(sys.argv[3])
+inst.nTelescopes = int(sys.argv[2])
+inst.nTargets = int(sys.argv[3])
+inst.horizon = int(sys.argv[4])
 
-minGain = int(sys.argv[4])
-maxGain = int(sys.argv[5])
+minGain = int(sys.argv[5])
+maxGain = int(sys.argv[6])
 
-minCadence = int(sys.argv[6])
-maxCadence = int(sys.argv[7])
+minCadence = int(sys.argv[7])
+maxCadence = int(sys.argv[8])
 
-minPeriod = int(sys.argv[8])
-maxPeriod = int(sys.argv[9])
+minPeriod = int(sys.argv[9])
+maxPeriod = int(sys.argv[10])
 
-percentOffset = int(sys.argv[10])
-offsetSize    = int(sys.argv[11])
+percentOffset = int(sys.argv[11])
+offsetSize    = int(sys.argv[12])
 
-inst.balanceNumerator   = int(sys.argv[12])
-inst.balanceDenominator = int(sys.argv[13])
+inst.balanceNumerator   = int(sys.argv[13])
+inst.balanceDenominator = int(sys.argv[14])
 
 rawGains=[]
 for target in range(inst.nTargets):
@@ -65,6 +67,6 @@ for target in range(inst.nTargets):
 
 inst.nSlots = int(round(float(inst.horizon) / min( inst.period )))
 
-f = open(sys.argv[14], "wb")
+f = open(sys.argv[15], "wb")
 f.write(inst.SerializeToString())
 f.close()

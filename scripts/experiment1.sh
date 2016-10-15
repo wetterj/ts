@@ -12,6 +12,8 @@ dir=$(mktemp -d 'exp1-XXXXX')
 instanceDir=${dir}/instances
 mkdir ${instanceDir}
 instances=''
+outdir=experiments/exp1/
+mkdir -p ${outdir}
 
 # generate some instances
 TELE=1
@@ -87,6 +89,12 @@ python telescopes/python/mkInstance.py $SEED $TELE $TARG $HORI $MIN_GAIN $MAX_GA
 instances=${instances}' '${OUTPUT}
 
 # Run all the configurations on all instances
-parallel -j ${THREADS} echo ./bin/completeSearch ::: ${instances} ::: ${TIMEOUT} ::: o ::: f t ::: f t ::: f t
+function runComplete {
+  ./bin/completeSearch $1 $2 $3 $4 $5 $6 | tail -n -2 > ${outdir}/$1
+}
+
+export -f runComplete
+
+parallel -j ${THREADS} runComplete ::: ${instances} ::: ${TIMEOUT} ::: o ::: f t ::: f t ::: f t
 
 rm -rf $dir
