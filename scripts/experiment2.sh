@@ -46,59 +46,59 @@ for i in ${instances}; do
   done
   ave=$(python scripts/mean.py $nums)
   std=$(python scripts/stddev.py $nums)
-  echo $nums
   printf "${ave}\t${std}\n" >> ${outdir}/quals
 done
-#
-## for each config print timeout crossed
-#printf '' > ${outdir}/timeout
-#for c in $CONFIGS;do
-#  printf "\t$c" >> ${outdir}/timeout
-#done
-#printf "\n" >> ${outdir}/timeout
-#
-#for i in ${instances}; do
-#  for c in $CONFIGS;do
-#    d=$(head -n +4 ${outdir}/${c}-$(basename $i) | tail -n -1)
-#    d=($d)
-#    printf "\t${d[1]}" >> ${outdir}/timeout
-#  done
-#  printf "\n" >> ${outdir}/timeout
-#done
-#
-## for each config print time to best solution
-#printf '' > ${outdir}/time
-#for c in $CONFIGS;do
-#  printf "\t$c" >> ${outdir}/time
-#done
-#printf "\n" >> ${outdir}/time
-#
-#for i in ${instances}; do
-#  for c in $CONFIGS;do
-#    d=$(head -n +1 ${outdir}/${c}-$(basename $i))
-#    d=($d)
-#    printf "\t${d[1]}" >> ${outdir}/time
-#  done
-#  printf "\n" >> ${outdir}/time
-#done
-#
-## for each config print time total
-#printf '' > ${outdir}/close-time
-#for c in $CONFIGS;do
-#  printf "\t$c" >> ${outdir}/close-time
-#done
-#printf "\n" >> ${outdir}/close-time
-#
-#for i in ${instances}; do
-#  for c in $CONFIGS;do
-#    d=$(head -n +1 ${outdir}/${c}-$(basename $i))
-#    d=($d)
-#    printf "\t${d[1]}" >> ${outdir}/close-time
-#  done
-#  printf "\n" >> ${outdir}/close-time
-#done
-#
-## for each config print fails to best solution
+
+# for each different branches print timeout
+printf "\tbestX\trandomMean\trandomStdDev\n" > ${outdir}/timeout
+for i in ${instances}; do
+  d=$(head -n +4 ${outdir}/b-1-$(basename $i) | tail -n -1)
+  d=($d)
+  printf "\t${d[1]}\t" >> ${outdir}/timeout
+  nums=''
+  for s in $(seq ${N_RANDOM});do
+    d=$(head -n +4 ${outdir}/r-${s}-$(basename $i) | tail -n -1)
+    d=($d)
+    nums="$nums ${d[1]}"
+  done
+  ave=$(python scripts/mean.py $nums)
+  std=$(python scripts/stddev.py $nums)
+  printf "${ave}\t${std}\n" >> ${outdir}/timeout
+done
+
+# for each different branches print time
+printf "\tbestX\trandomMean\trandomStdDev\n" > ${outdir}/time
+for i in ${instances}; do
+  d=$(head -n +1 ${outdir}/b-1-$(basename $i) | tail -n -1)
+  d=($d)
+  printf "\t${d[1]}\t" >> ${outdir}/time
+  nums=''
+  for s in $(seq ${N_RANDOM});do
+    d=$(head -n +1 ${outdir}/r-${s}-$(basename $i) | tail -n -1)
+    d=($d)
+    nums="$nums ${d[1]}"
+  done
+  ave=$(python scripts/mean.py $nums)
+  std=$(python scripts/stddev.py $nums)
+  printf "${ave}\t${std}\n" >> ${outdir}/time
+done
+
+# for each config print fails to best solution
+printf "\tbestX\trandomMean\trandomStdDev\n" > ${outdir}/fails
+for i in ${instances}; do
+  d=$(head -n +2 ${outdir}/b-1-$(basename $i) | tail -n -1)
+  d=($d)
+  printf "\t${d[1]}\t" >> ${outdir}/fails
+  nums=''
+  for s in $(seq ${N_RANDOM});do
+    d=$(head -n +2 ${outdir}/r-${s}-$(basename $i) | tail -n -1)
+    d=($d)
+    nums="$nums ${d[1]}"
+  done
+  ave=$(python scripts/mean.py $nums)
+  std=$(python scripts/stddev.py $nums)
+  printf "${ave}\t${std}\n" >> ${outdir}/fails
+done
 #printf '' > ${outdir}/fails
 #for c in $CONFIGS;do
 #  printf "\t$c" >> ${outdir}/fails
