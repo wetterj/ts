@@ -11,8 +11,8 @@ TELESCOPE_OBJ= $(OBJ_DIR)$SInstance.$O \
 						   $(OBJ_DIR)$Sinstance.pb.$O \
 						   $(OBJ_DIR)$Ssolution.pb.$O
 
-#EXTRA_FLAGS= -O0 -g
-EXTRA_FLAGS=
+EXTRA_FLAGS= -O0 -g
+#EXTRA_FLAGS=
 
 # The c source
 $(OBJ_DIR)$SInstance.$O: $(TELESCOPE_DIR)$SInstance.cpp $(TELESCOPE_DIR)$SInstance.hpp $(OBJ_DIR)$Sinstance.pb.$O 

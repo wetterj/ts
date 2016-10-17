@@ -219,11 +219,13 @@ void FixObservation::Apply(operations_research::Solver* const s) {
   s->SaveValue(&schedule.lastTele[target]);
   s->SaveValue(&schedule.lastSlot[target]);
   s->SaveValue(&schedule.lastTime[target]);
+  s->SaveValue(&schedule.fixedObservations);
   // update the cached info
   schedule.lastTele[target] = telescope;
   schedule.lastSlot[target] = slot;
   schedule.lastTime[target] = schedule.getTime( slot, telescope )->Value();
   ++schedule.nextSlot[telescope];
+  ++schedule.fixedObservations;
   // Fix the variable value
   schedule.getTarget( slot, telescope )->SetValue(target);
   schedule.getContribution( slot, telescope )->SetValue(contribution);
@@ -291,21 +293,24 @@ Decision* RandomTarget::Next(Solver* const s) {
 BestTarget::Eval::Eval(int t,int e) : target(t), qual(e) {}
 
 BestTarget::BestTarget(Schedule &s,bool on,bool teleOn,bool xOn) : ScheduleBrancher(s,on,teleOn,xOn) {
-  evals.emplace_back();
 }
 
 operations_research::Decision* BestTarget::Next(operations_research::Solver* const s) {
-  while(evals.size() != 0) {
+  //cout << "fixedObs is " << schedule.fixedObservations << endl;
+  //if(schedule.fixedObservations >= 0) {
     // Choose the telescope
     int tele = schedule.chooseTelescope();
     if(tele < 0) {
+      //cout << "no choices left\n";
       //schedule.printCurrentState();
       return nullptr;
     }
 
     // Choose the target
     // We don't have the evaluations here yet
-    if(evals.back().size() == 0) {
+    if(evals.size() == schedule.fixedObservations) {
+      //cout << "building evals\n";
+      evals.emplace_back();
       auto it = schedule.getTarget( schedule.nextSlot[tele], tele )->MakeDomainIterator( false );
       it->Init();
       while(it->Ok()) {
@@ -317,27 +322,46 @@ operations_research::Decision* BestTarget::Next(operations_research::Solver* con
       delete it;
       sort( evals.back().begin(), evals.back().end(),
             [](Eval const &l,Eval const &r) { return l.qual < r.qual; } );
+    } 
+    while(evals.size() > schedule.fixedObservations+1) {
+      //cout << "poping an eval\n";
+      evals.pop_back();
     }
     // iterate until you find a value that can be used
     for(int jdx=evals.back().size()-1;jdx >= 0;--jdx)
       if(schedule.getTarget( schedule.nextSlot[tele], tele )->Contains( evals.back()[jdx].target )) {
         auto eval = evals.back()[jdx];
 
-        evals.emplace_back();
+        //cout << "setting " << tele << " " << schedule.nextSlot[tele] << " to " << eval.target << " " << eval.qual << endl;
+        //schedule.printCurrentState();
         return s->RevAlloc( new FixObservation(this, eval.target, tele, eval.qual ) );
       }
-      else
+      else {
+        //cout << "skipping " << evals.back().back().target << endl;
         evals.back().pop_back();
+      }
+    // iterate until you find a value that can be used
+    //while(evals.back().size()>0)
+    //  if(schedule.getTarget( schedule.nextSlot[tele], tele )->Contains( evals.back().back().target )) {
+    //    auto eval = evals.back().back();
+    //    evals.back().pop_back();
+
+    //    evals.emplace_back();
+    //    return s->RevAlloc( new FixObservation(this, eval.target, tele, eval.qual ) );
+    //  }
+    //  else
+    //    evals.back().pop_back();
 
     // We ran out of choices at this slot
     reportRefute();
     return s->MakeFailDecision();
-  }
-  return nullptr;
+  //}
+  //cout << "evals was empty\n";
+  //return nullptr;
 }
 
 void BestTarget::reportRefute() {
-  evals.pop_back();
+  //evals.pop_back();
 }
 
 BestTarget::~BestTarget() {}

@@ -83,6 +83,7 @@ protected:
   std::vector<int> lastTime;
   // The next unbound slot for each telescope
   std::vector<int> nextSlot;
+  int fixedObservations;
 };
 
 #endif

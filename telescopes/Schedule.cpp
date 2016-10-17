@@ -126,6 +126,8 @@ Schedule::Schedule(Instance const &i,operations_research::Solver &s) : instance(
   for(int t=0;t<instance.nTelescopes;++t) {
     nextSlot[t] = 0;
   }
+
+  fixedObservations = 0;
 }
 
 operations_research::IntVar *Schedule::getTarget(int slot,int tele) {
