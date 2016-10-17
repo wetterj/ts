@@ -60,9 +60,13 @@ int main(int argc,char **argv) {
   while(solver.NextSolution()) {
     auto now = high_resolution_clock::now();
     cout << "time: " << duration_cast<microseconds>(now - start).count() / 1000000.f << endl;
-    cout << "branches: " << solver.branches() << endl;
+    cout << "branches: " << solver.failures() << endl;
     cout << "quality: " << schedule.getQuality()->Value() << endl;
   }
+  cout << "crossed: " << lim->Check() << endl;
+  auto now = high_resolution_clock::now();
+  cout << "time: " << duration_cast<microseconds>(now - start).count() / 1000000.f << endl;
+  cout << "branches: " << solver.failures() << endl;
 
   delete db;
 

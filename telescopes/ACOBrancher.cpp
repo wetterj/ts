@@ -74,6 +74,7 @@ operations_research::Decision* ACOBrancher::Next(operations_research::Solver* co
 
     // We ran out of choices at this slot
     reportRefute();
+    return s->MakeFailDecision();
   }
   //schedule.printCurrentState();
   return nullptr;

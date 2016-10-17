@@ -82,32 +82,44 @@ void CheckBound::prop(Schedule &schedule,Solver &solver,int contrib) {
     //    from = schedule.lastTime[targ] + instance.getCadence(targ);
     //  else
     //}
-    float nObs = max(timeRemaining, 1.f + (float) (schedule.instance.getVisTo(targ) - earliest) / (float) schedule.instance.getCadence(targ));
+    int idealCadence = schedule.instance.getCadence(targ);
+    float initObs=1.f;
+    if(schedule.lastTime[targ] >= 0) {
+      int actualC = earliest - schedule.lastTime[targ];
+      initObs = (float) (idealCadence - abs(idealCadence - actualC)) / idealCadence;
+    }
+    float nObs = min(timeRemaining, initObs + (float) (schedule.instance.getVisTo(targ) - earliest) / (float) idealCadence);
     timeRemaining -= nObs * schedule.instance.minPeriodTarg(targ);
     upperBound    += nObs * schedule.instance.maxGainTarg(targ);
     ++idx;
   }
+  //if(schedule.quality->Max() > preFixQual + (int64) ceil(upperBound) ) {
+  //  cout << "change upper bound\n";
+  //}
   schedule.quality->SetMax( preFixQual + (int64) ceil(upperBound) );
 
-  int64 slotsRemain=0;
-  for(int tele=0;tele<schedule.instance.nTelescopes;++tele) {
-    auto nextTime = schedule.instance.horizon;
-    if(schedule.nextSlot[tele] >= 0)
-      nextTime = schedule.getTime( schedule.nextSlot[tele], tele )->Value();
+  //float slotsRemain=0.f;
+  //for(int tele=0;tele<schedule.instance.nTelescopes;++tele) {
+  //  auto nextTime = schedule.instance.horizon;
+  //  if(schedule.nextSlot[tele] >= 0)
+  //    nextTime = schedule.getTime( schedule.nextSlot[tele], tele )->Value();
 
-    slotsRemain += (int64) ( (float) max<int64>(0, schedule.instance.horizon - nextTime) / (float) schedule.instance.minPeriodTele(tele) );
-  }
-  idx = 0;
-  int64 upperBound2 = 0;
-  while(slotsRemain > 0 && idx < evals.size()) {
-    int64 targ = evals[idx].target;
-    int64 nObs = max(slotsRemain, (int64) ceil((float) (schedule.instance.getVisTo(targ) - earliest) / (float) schedule.instance.getCadence(targ)) + 1);
-    slotsRemain -= nObs;
-    upperBound2 += nObs * schedule.instance.maxGainTarg(targ);
-    ++idx;
-  }
+  //  slotsRemain += (float) max<int64>(0, schedule.instance.horizon - nextTime) / (float) schedule.instance.minPeriodTele(tele);
+  //}
+  //idx = 0;
+  //int64 upperBound2 = 0;
+  //while(slotsRemain > 0. && idx < evals.size()) {
+  //  int64 targ = evals[idx].target;
+  //  float nObs = min(slotsRemain, (float) (schedule.instance.getVisTo(targ) - earliest) / (float) schedule.instance.getCadence(targ));
+  //  slotsRemain -= nObs;
+  //  upperBound2 += nObs * schedule.instance.maxGainTarg(targ);
+  //  ++idx;
+  //}
 
-  schedule.quality->SetMax( preFixQual + upperBound2 );
+  ////if(schedule.quality->Max() > preFixQual + (int64) ceil(upperBound2) ) {
+  ////  cout << "change upper bound slots\n";
+  ////}
+  //schedule.quality->SetMax( preFixQual + upperBound2 );
 }
 
 CheckBoundTele::CheckBoundTele(int t,Instance const &instance,bool o) {
@@ -147,32 +159,38 @@ void CheckBoundTele::prop(Schedule &schedule,Solver &solver,int contrib) {
   while(timeRemaining > 0. && idx < evals.size()) {
     int targ = evals[idx].target;
 
-    float nObs = max(timeRemaining, 1.f + (float) (schedule.instance.getVisTo(targ) - earliest) / (float) schedule.instance.getCadence(targ));
+    int idealCadence = schedule.instance.getCadence(targ);
+    float initObs=1.f;
+    if(schedule.lastTime[targ] >= 0) {
+      int actualC = earliest - schedule.lastTime[targ];
+      initObs = (float) (idealCadence - abs(idealCadence - actualC)) / idealCadence;
+    }
+    float nObs = min(timeRemaining, initObs + (float) (schedule.instance.getVisTo(targ) - earliest) / (float) idealCadence);
     timeRemaining -= nObs * schedule.instance.getPeriod(telescope, targ);
     upperBound    += nObs * schedule.instance.getGain(telescope, targ);
     ++idx;
   }
   schedule.teleQuality[telescope]->SetMax( preFixQual + (int64) ceil(upperBound) );
 
-  int64 slotsRemain=0;
-  {
-    auto nextTime = schedule.instance.horizon;
-    if(schedule.nextSlot[telescope] >= 0)
-      nextTime = schedule.getTime( schedule.nextSlot[telescope], telescope )->Value();
+  //int64 slotsRemain=0;
+  //{
+  //  auto nextTime = schedule.instance.horizon;
+  //  if(schedule.nextSlot[telescope] >= 0)
+  //    nextTime = schedule.getTime( schedule.nextSlot[telescope], telescope )->Value();
 
-    slotsRemain += (int64) ( (float) max<int64>(0, schedule.instance.horizon - nextTime) / (float) schedule.instance.minPeriodTele(telescope) );
-  }
-  idx = 0;
-  int64 upperBound2 = 0;
-  while(slotsRemain > 0 && idx < evals.size()) {
-    int64 targ = evals[idx].target;
-    int64 nObs = max(slotsRemain, (int64) ceil((float) (schedule.instance.getVisTo(targ) - earliest) / (float) schedule.instance.getCadence(targ)) + 1);
-    slotsRemain -= nObs;
-    upperBound2 += nObs * schedule.instance.getGain(telescope,targ);
-    ++idx;
-  }
+  //  slotsRemain += (int64) ( (float) max<int64>(0, schedule.instance.horizon - nextTime) / (float) schedule.instance.minPeriodTele(telescope) );
+  //}
+  //idx = 0;
+  //int64 upperBound2 = 0;
+  //while(slotsRemain > 0 && idx < evals.size()) {
+  //  int64 targ = evals[idx].target;
+  //  int64 nObs = max(slotsRemain, (int64) ceil((float) (schedule.instance.getVisTo(targ) - earliest) / (float) schedule.instance.getCadence(targ)) + 1);
+  //  slotsRemain -= nObs;
+  //  upperBound2 += nObs * schedule.instance.getGain(telescope,targ);
+  //  ++idx;
+  //}
 
-  schedule.teleQuality[telescope]->SetMax( preFixQual + upperBound2 );
+  //schedule.teleQuality[telescope]->SetMax( preFixQual + upperBound2 );
 }
 
 ScheduleBrancher::ScheduleBrancher(Schedule &s,bool o,bool to,bool xo)
@@ -192,6 +210,10 @@ FixObservation::FixObservation(ScheduleBrancher *s,int tar,int tele,int contrib)
 
 void FixObservation::Apply(operations_research::Solver* const s) {
   auto &schedule = scheduleBrancher->schedule;
+
+  //cout << "gonna fix tele: " << telescope << " slot " << slot << " target " << target << endl;
+  //schedule.printCurrentState();
+
   // save the relevant cached info
   s->SaveValue(&schedule.nextSlot[telescope]);
   s->SaveValue(&schedule.lastTele[target]);
@@ -212,7 +234,6 @@ void FixObservation::Apply(operations_research::Solver* const s) {
   scheduleBrancher->checkBoundTele[telescope].prop(schedule, *s, contribution);
   // check bound for each observation
   scheduleBrancher->upperBoundX.prop(target, schedule.lastTime[target], *s);
-  //schedule.printCurrentState();
 }
 
 void FixObservation::Refute(operations_research::Solver* const s) {
@@ -239,7 +260,9 @@ Decision* InOrder::Next(Solver* const s) {
 
   // the target
   int targ = schedule.getTarget(schedule.nextSlot[tele], tele )->Min();
-  int eval = schedule.evalChoice(tele, targ);
+  int eval = 0;
+  //if(schedule.getTime(schedule.nextSlot[tele], tele)->Value() + schedule.instance.getPeriod(tele, targ) < schedule.instance.horizon)
+    eval = schedule.evalChoice(tele, targ);
   return s->RevAlloc( new FixObservation(this, targ, tele, eval) );
 }
 
@@ -308,6 +331,7 @@ operations_research::Decision* BestTarget::Next(operations_research::Solver* con
 
     // We ran out of choices at this slot
     reportRefute();
+    return s->MakeFailDecision();
   }
   return nullptr;
 }

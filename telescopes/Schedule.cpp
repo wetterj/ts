@@ -196,11 +196,15 @@ int Schedule::chooseTelescope() {
 }
 
 int Schedule::evalChoice(int tele,int targ) {
+  int t = getTime( nextSlot[tele], tele )->Value();
+  // If the observation will be too late, make it zero
+  if(t + instance.getPeriod(tele,targ) > instance.horizon)
+    return 0;
   // If it has not been observed, perfect observation
   if(lastTime[targ] < 0)
     return instance.getGain(tele,targ);
   // linearly decrease it otherwise
-  int diff = getTime( nextSlot[tele], tele )->Value() - lastTime[targ];
+  int diff = t - lastTime[targ];
   float scale = max(0.f, (float) (instance.getCadence(targ) - abs(instance.getCadence(targ) - diff)) / instance.getCadence(targ));
   return scale*instance.getGain(tele,targ);
 }
