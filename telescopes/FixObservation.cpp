@@ -73,22 +73,13 @@ void CheckBound::prop(Schedule &schedule,Solver &solver,int contrib) {
   float upperBound = 0.f;
   while(timeRemaining > 0. && idx < evals.size()) {
     int targ = evals[idx].target;
-    // TODO: add this back in for a better bound
-    //// the earliest we can view it effectivly
-    //int from=earliest;
-    //float penalty;
-    //if(schedule.lastTime[targ] >= 0) {
-    //  if(schedule.lastTime[targ] + instance.getCadence(targ) >= from)
-    //    from = schedule.lastTime[targ] + instance.getCadence(targ);
-    //  else
-    //}
     int idealCadence = schedule.instance.getCadence(targ);
     float initObs=1.f;
-    if(schedule.lastTime[targ] >= 0) {
-      int actualC = earliest - schedule.lastTime[targ];
-      initObs = (float) (idealCadence - abs(idealCadence - actualC)) / idealCadence;
-    }
-    float nObs = min(timeRemaining, initObs + (float) (schedule.instance.getVisTo(targ) - earliest) / (float) idealCadence);
+    //if(schedule.lastTime[targ] >= 0) {
+    //  int actualC = earliest - schedule.lastTime[targ];
+    //  initObs = (float) (idealCadence - abs(idealCadence - actualC)) / idealCadence;
+    //}
+    float nObs = min(timeRemaining, initObs + (float) (schedule.instance.getVisTo(targ) - earliest) / (float) idealCadence );
     timeRemaining -= nObs * schedule.instance.minPeriodTarg(targ);
     upperBound    += nObs * schedule.instance.maxGainTarg(targ);
     ++idx;
@@ -161,10 +152,10 @@ void CheckBoundTele::prop(Schedule &schedule,Solver &solver,int contrib) {
 
     int idealCadence = schedule.instance.getCadence(targ);
     float initObs=1.f;
-    if(schedule.lastTime[targ] >= 0) {
-      int actualC = earliest - schedule.lastTime[targ];
-      initObs = (float) (idealCadence - abs(idealCadence - actualC)) / idealCadence;
-    }
+    //if(schedule.lastTime[targ] >= 0) {
+    //  int actualC = earliest - schedule.lastTime[targ];
+    //  initObs = (float) (idealCadence - abs(idealCadence - actualC)) / idealCadence;
+    //}
     float nObs = min(timeRemaining, initObs + (float) (schedule.instance.getVisTo(targ) - earliest) / (float) idealCadence);
     timeRemaining -= nObs * schedule.instance.getPeriod(telescope, targ);
     upperBound    += nObs * schedule.instance.getGain(telescope, targ);
@@ -202,8 +193,6 @@ ScheduleBrancher::ScheduleBrancher(Schedule &s,bool o,bool to,bool xo)
 
 ScheduleBrancher::~ScheduleBrancher() {}
 
-void ScheduleBrancher::reportRefute() {}
-
 FixObservation::FixObservation(ScheduleBrancher *s,int tar,int tele,int contrib)
 : scheduleBrancher(s), target(tar), telescope(tele), contribution(contrib), slot(scheduleBrancher->schedule.nextSlot[telescope]) {
 }
@@ -239,7 +228,6 @@ void FixObservation::Apply(operations_research::Solver* const s) {
 }
 
 void FixObservation::Refute(operations_research::Solver* const s) {
-  scheduleBrancher->reportRefute();
   // remove the failed value
   scheduleBrancher->schedule.getTarget( slot, telescope )->RemoveValue(target);
 }
@@ -290,81 +278,84 @@ Decision* RandomTarget::Next(Solver* const s) {
   return s->RevAlloc( new FixObservation(this, targ, tele, eval) );
 }
 
-BestTarget::Eval::Eval(int t,int e) : target(t), qual(e) {}
+BestTarget::Eval::Eval(int t,float e) : target(t), qual(e) {}
 
 BestTarget::BestTarget(Schedule &s,bool on,bool teleOn,bool xOn) : ScheduleBrancher(s,on,teleOn,xOn) {
 }
 
 operations_research::Decision* BestTarget::Next(operations_research::Solver* const s) {
-  //cout << "fixedObs is " << schedule.fixedObservations << endl;
-  //if(schedule.fixedObservations >= 0) {
-    // Choose the telescope
-    int tele = schedule.chooseTelescope();
-    if(tele < 0) {
-      //cout << "no choices left\n";
-      //schedule.printCurrentState();
-      return nullptr;
+  // Choose the telescope
+  int tele = schedule.chooseTelescope();
+  if(tele < 0)
+    return nullptr;
+
+  // Choose the target
+  // We don't have the evaluations here yet
+  if(evals.size() == schedule.fixedObservations)
+    evalTargets(tele);
+  else if(evals.size() < schedule.fixedObservations) {
+    cerr << "opps\n";
+    exit(1);
+  }
+  while(evals.size() > schedule.fixedObservations+1)
+    evals.pop_back();
+  // iterate until you find a value that can be used
+  for(int jdx=evals.back().size()-1;jdx >= 0;--jdx)
+    if(schedule.getTarget( schedule.nextSlot[tele], tele )->Contains( evals.back()[jdx].target )) {
+      auto eval = evals.back()[jdx];
+      int qual = schedule.evalChoice(tele, eval.target);
+      return s->RevAlloc( new FixObservation(this, eval.target, tele, qual ) );
     }
-
-    // Choose the target
-    // We don't have the evaluations here yet
-    if(evals.size() == schedule.fixedObservations) {
-      //cout << "building evals\n";
-      evals.emplace_back();
-      auto it = schedule.getTarget( schedule.nextSlot[tele], tele )->MakeDomainIterator( false );
-      it->Init();
-      while(it->Ok()) {
-        auto target = it->Value();
-        auto eval   = schedule.evalChoice(tele, target);
-        evals.back().emplace_back(target, eval);
-        it->Next();
-      }
-      delete it;
-      sort( evals.back().begin(), evals.back().end(),
-            [](Eval const &l,Eval const &r) { return l.qual < r.qual; } );
-    } 
-    while(evals.size() > schedule.fixedObservations+1) {
-      //cout << "poping an eval\n";
-      evals.pop_back();
-    }
-    // iterate until you find a value that can be used
-    for(int jdx=evals.back().size()-1;jdx >= 0;--jdx)
-      if(schedule.getTarget( schedule.nextSlot[tele], tele )->Contains( evals.back()[jdx].target )) {
-        auto eval = evals.back()[jdx];
-
-        //cout << "setting " << tele << " " << schedule.nextSlot[tele] << " to " << eval.target << " " << eval.qual << endl;
-        //schedule.printCurrentState();
-        return s->RevAlloc( new FixObservation(this, eval.target, tele, eval.qual ) );
-      }
-      else {
-        //cout << "skipping " << evals.back().back().target << endl;
-        evals.back().pop_back();
-      }
-    // iterate until you find a value that can be used
-    //while(evals.back().size()>0)
-    //  if(schedule.getTarget( schedule.nextSlot[tele], tele )->Contains( evals.back().back().target )) {
-    //    auto eval = evals.back().back();
-    //    evals.back().pop_back();
-
-    //    evals.emplace_back();
-    //    return s->RevAlloc( new FixObservation(this, eval.target, tele, eval.qual ) );
-    //  }
-    //  else
-    //    evals.back().pop_back();
-
-    // We ran out of choices at this slot
-    reportRefute();
-    return s->MakeFailDecision();
-  //}
-  //cout << "evals was empty\n";
-  //return nullptr;
-}
-
-void BestTarget::reportRefute() {
-  //evals.pop_back();
+    else
+      evals.back().pop_back();
+  // We ran out of choices at this slot
+  return s->MakeFailDecision();
 }
 
 BestTarget::~BestTarget() {}
+
+PrefixQual::PrefixQual(Schedule &sched,bool propQ,bool propQR,bool propX) : BestTarget(sched,propQ,propQR,propX) {
+}
+
+PrefixQual::~PrefixQual() {}
+
+bool PrefixQual::evalTargets(int tele) {
+  evals.emplace_back();
+  auto it = schedule.getTarget( schedule.nextSlot[tele], tele )->MakeDomainIterator( false );
+  it->Init();
+  while(it->Ok()) {
+    auto target = it->Value();
+    float eval   = schedule.evalChoice(tele, target);
+    evals.back().emplace_back(target, eval);
+    it->Next();
+  }
+  delete it;
+  sort( evals.back().begin(), evals.back().end(),
+        [](Eval const &l,Eval const &r) { return l.qual < r.qual; } );
+}
+
+PrePostQual::PrePostQual(Schedule &s,bool propQ,bool propQr,bool propX) : BestTarget(s,propQ,propQr,propX) {}
+
+PrePostQual::~PrePostQual() {}
+  
+bool PrePostQual::evalTargets(int tele) {
+  evals.emplace_back();
+  auto it = schedule.getTarget( schedule.nextSlot[tele], tele )->MakeDomainIterator( false );
+  it->Init();
+  int minP = schedule.instance.minPeriodTele(tele);
+  while(it->Ok()) {
+    auto target = it->Value();
+    float loss = 0.f;
+    if(schedule.lastTime[target] < 0)//schedule.lastTime[target] + schedule.instance.getCadence(target) < schedule.getTime( schedule.nextSlot[tele], tele )->Value()) {
+      loss = (float) schedule.instance.maxGainTarg(target) * ((float) minP / (float) schedule.instance.getCadence(target) );
+    float eval  = (float) schedule.evalChoice(tele, target) + loss;
+    evals.back().emplace_back(target, eval);
+    it->Next();
+  }
+  delete it;
+  sort( evals.back().begin(), evals.back().end(),
+        [](Eval const &l,Eval const &r) { return l.qual < r.qual; } );
+}
 
 class LowerBound : public Decision {
 public:
@@ -383,7 +374,7 @@ protected:
   IntVar *var;
 };
 
-ConstructNeighbour::ConstructNeighbour(int64 bnd,Solution const &sol,ScheduleBrancher *b,Solver &solver) 
+ConstructNeighbour::ConstructNeighbour(int64 bnd,Solution const &sol,BestTarget *b,Solver &solver) 
 : bound(bnd), solution(sol), brancher(b)
 {
   // select a time uniformly
@@ -406,6 +397,7 @@ operations_research::Decision* ConstructNeighbour::Next(operations_research::Sol
     if(slot<0) return nullptr;
     auto now  = schedule.getTime( slot, tele )->Value();
     if(now < time) {
+      brancher->evalTargets(tele);
       auto targ = solution.target[ slot*schedule.instance.nTelescopes + tele ];
       auto qual = solution.contribution[ slot*schedule.instance.nTelescopes + tele ];
       return s->RevAlloc( new FixObservation(brancher, targ, tele, qual) );
@@ -448,7 +440,70 @@ operations_research::Decision* ConstructNeighbour::Next(operations_research::Sol
     for(;idx < ps.size() && ps[idx] < c;++idx)
       c -= ps[idx];
 
+    brancher->evalTargets(tele);
     return s->RevAlloc( new FixObservation(brancher, evals[idx].target, tele, evals[idx].qual ) );
   }
   return brancher->Next(s);
 }
+
+FitnessProp::Eval::Eval(int64 t,int64 e,float q) : target(t), eval(e), fitness(q) {}
+
+FitnessProp::FitnessProp(int p,Schedule &s,bool on,bool teleOn,bool xOn) : ScheduleBrancher(s,on,teleOn,xOn), power(p) {
+}
+
+operations_research::Decision* FitnessProp::Next(operations_research::Solver* const s) {
+  // Choose the telescope
+  int tele = schedule.chooseTelescope();
+  if(tele < 0)
+    return nullptr;
+
+  // Choose the target
+  normaliseFitness(tele);
+
+  float rand = totalFitness * ((float) s->Rand64( numeric_limits<int64>::max() ) / (float) numeric_limits<int64>::max());
+  int targ=fitness.begin()->target;
+  int eval=fitness.begin()->eval;
+  float acc=0.f;
+  for(auto it=fitness.begin();it != fitness.end();++it) {
+    acc += it->fitness;
+    if(rand < acc && schedule.getTarget( schedule.nextSlot[tele], tele )->Contains( it->target )) {
+      targ = it->target;
+      eval = it->eval;
+      break;
+    }
+  }
+  return s->RevAlloc( new FixObservation(this, targ, tele, eval) );
+}
+
+void FitnessProp::normaliseFitness(int tele) {
+  fitness.clear();
+
+  auto it = schedule.getTarget( schedule.nextSlot[tele], tele )->MakeDomainIterator( false );
+  it->Init();
+  while(it->Ok()) {
+    auto target = it->Value();
+    auto eval   = schedule.evalChoice(tele, target);
+    fitness.emplace_back(target, eval, (float)eval);
+    it->Next();
+  }
+  delete it;
+
+  int64 minEval = numeric_limits<int64>::max();
+  int64 maxEval = numeric_limits<int64>::min();
+
+  for(auto const &e : fitness) {
+    minEval = min(minEval, e.eval);
+    maxEval = max(maxEval, e.eval);
+  }
+
+  for(auto &e : fitness) { 
+    e.fitness = (float) (e.eval - minEval + 1) / (float) (maxEval - minEval + 1);
+    e.fitness = pow(e.fitness,power);
+  }
+
+  totalFitness = 0.f;
+  for(auto const &e : fitness)
+    totalFitness += e.fitness;
+}
+
+FitnessProp::~FitnessProp() {}

@@ -36,6 +36,9 @@ public:
   friend class InOrder;
   friend class RandomTarget;
   friend class BestTarget;
+  friend class PrefixQual;
+  friend class PrePostQual;
+  friend class FitnessProp;
   friend class ACOBrancher;
   friend class CheckBound;
   friend class CheckBoundTele;

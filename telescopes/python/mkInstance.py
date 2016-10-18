@@ -25,7 +25,7 @@ minPeriod = int(sys.argv[9])
 maxPeriod = int(sys.argv[10])
 
 percentOffset = int(sys.argv[11])
-offsetSize    = int(sys.argv[12])
+offsetSize    = min(1,int(round(float(sys.argv[12]))))
 
 inst.balanceNumerator   = int(sys.argv[13])
 inst.balanceDenominator = int(sys.argv[14])

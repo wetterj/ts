@@ -9,10 +9,11 @@ TELESCOPE_OBJ= $(OBJ_DIR)$SInstance.$O \
 							 $(OBJ_DIR)$SPheromone.$O \
 							 $(OBJ_DIR)$SACOBrancher.$O \
 						   $(OBJ_DIR)$Sinstance.pb.$O \
-						   $(OBJ_DIR)$Ssolution.pb.$O
+						   $(OBJ_DIR)$Ssolution.pb.$O \
+							 $(OBJ_DIR)$Sresults.pb.$O
 
-EXTRA_FLAGS= -O0 -g
-#EXTRA_FLAGS=
+#EXTRA_FLAGS= -O0 -g
+EXTRA_FLAGS=
 
 # The c source
 $(OBJ_DIR)$SInstance.$O: $(TELESCOPE_DIR)$SInstance.cpp $(TELESCOPE_DIR)$SInstance.hpp $(OBJ_DIR)$Sinstance.pb.$O 
@@ -42,6 +43,9 @@ $(OBJ_DIR)$ScompleteSearch.$O: $(TELESCOPE_DIR)$ScompleteSearch.cpp
 $(OBJ_DIR)$Sgreedy.$O: $(TELESCOPE_DIR)$Sgreedy.cpp
 	$(CCC) $(CFLAGS) $(EXTRA_FLAGS) -c $(TELESCOPE_DIR)$Sgreedy.cpp $(OBJ_OUT)$(OBJ_DIR)$Sgreedy.$O
 
+$(OBJ_DIR)$SgreedyOpt.$O: $(TELESCOPE_DIR)$SgreedyOpt.cpp
+	$(CCC) $(CFLAGS) $(EXTRA_FLAGS) -c $(TELESCOPE_DIR)$SgreedyOpt.cpp $(OBJ_OUT)$(OBJ_DIR)$SgreedyOpt.$O
+
 $(OBJ_DIR)$SsimulatedAnnealing1.$O: $(TELESCOPE_DIR)$SsimulatedAnnealing1.cpp
 	$(CCC) $(CFLAGS) $(EXTRA_FLAGS) -c $(TELESCOPE_DIR)$SsimulatedAnnealing1.cpp $(OBJ_OUT)$(OBJ_DIR)$SsimulatedAnnealing1.$O
 
@@ -69,12 +73,22 @@ $(TELESCOPE_DIR)$Ssolution.pb.cc: $(TELESCOPE_DIR)$Ssolution.proto
 $(OBJ_DIR)$Ssolution.pb.$O: $(TELESCOPE_DIR)$Ssolution.pb.cc
 	$(CCC) $(CFLAGS) $(EXTRA_FLAGS) -c $(TELESCOPE_DIR)$Ssolution.pb.cc $(OBJ_OUT)$(OBJ_DIR)$Ssolution.pb.$O
 
+$(TELESCOPE_DIR)$Sresults.pb.cc: $(TELESCOPE_DIR)$Sresults.proto
+	$(MKDIR_P) $(TELESCOPE_DIR)$Spython
+	$(PROTOBUF_DIR)/bin/protoc --proto_path=$(TELESCOPE_DIR) --cpp_out=$(TELESCOPE_DIR) --python_out=$(TELESCOPE_DIR)$Spython $(TELESCOPE_DIR)$Sresults.proto
+
+$(OBJ_DIR)$Sresults.pb.$O: $(TELESCOPE_DIR)$Sresults.pb.cc
+	$(CCC) $(CFLAGS) $(EXTRA_FLAGS) -c $(TELESCOPE_DIR)$Sresults.pb.cc $(OBJ_OUT)$(OBJ_DIR)$Sresults.pb.$O
+
 # The binaries
 $(BIN_DIR)$ScompleteSearch$E: $(OBJ_DIR)$Sinstance.pb.$O $(OBJ_DIR)$ScompleteSearch.$O $(TELESCOPE_OBJ) $(CP_DEPS)
 	$(CCC) $(CFLAGS) $(EXTRA_FLAGS) $(OBJ_DIR)$ScompleteSearch.$O $(TELESCOPE_OBJ) $(OR_TOOLS_LIBS) $(LD_FLAGS) $(EXE_OUT)$(BIN_DIR)$ScompleteSearch$E
 
 $(BIN_DIR)$Sgreedy$E: $(OBJ_DIR)$Sinstance.pb.$O $(OBJ_DIR)$Sgreedy.$O $(TELESCOPE_OBJ) $(CP_DEPS)
 	$(CCC) $(CFLAGS) $(EXTRA_FLAGS) $(OBJ_DIR)$Sgreedy.$O $(TELESCOPE_OBJ) $(OR_TOOLS_LIBS) $(LD_FLAGS) $(EXE_OUT)$(BIN_DIR)$Sgreedy$E
+
+$(BIN_DIR)$SgreedyOpt$E: $(OBJ_DIR)$Sinstance.pb.$O $(OBJ_DIR)$SgreedyOpt.$O $(TELESCOPE_OBJ) $(CP_DEPS)
+	$(CCC) $(CFLAGS) $(EXTRA_FLAGS) $(OBJ_DIR)$SgreedyOpt.$O $(TELESCOPE_OBJ) $(OR_TOOLS_LIBS) $(LD_FLAGS) $(EXE_OUT)$(BIN_DIR)$SgreedyOpt$E
 
 $(BIN_DIR)$SsimulatedAnnealing1$E: $(OBJ_DIR)$Sinstance.pb.$O $(OBJ_DIR)$SsimulatedAnnealing1.$O $(TELESCOPE_OBJ) $(CP_DEPS)
 	$(CCC) $(CFLAGS) $(EXTRA_FLAGS) $(OBJ_DIR)$SsimulatedAnnealing1.$O $(TELESCOPE_OBJ) $(OR_TOOLS_LIBS) $(LD_FLAGS) $(EXE_OUT)$(BIN_DIR)$SsimulatedAnnealing1$E

@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+message Results {
+  message DataPoint {
+    float time = 1;
+    int32 fails = 2;
+    int32 qual = 3;
+  }
+
+  repeated DataPoint point = 1;
+
+  message Closed {
+    float time = 1;
+    int32 fails = 2;
+  }
+
+  Closed closed = 2;
+}

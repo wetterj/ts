@@ -11,6 +11,7 @@ using namespace std;
 using namespace operations_research;
 using namespace chrono;
 
+
 int main(int argc,char **argv) {
   GOOGLE_PROTOBUF_VERIFY_VERSION;
   if(argc != 5) {
@@ -37,15 +38,14 @@ int main(int argc,char **argv) {
   int64 nhtimeout = atoi(argv[4]);
   PrefixQual db(schedule,true,true,true);
 
-  //auto col = schedule.lastSol(solver);
-  auto col = schedule.firstSol(solver);
+  auto col = schedule.lastSol(solver);
   auto nhlim = solver.MakeTimeLimit(nhtimeout);
   auto firstlim = solver.MakeTimeLimit(inittimeout);
 
   auto obj = solver.MakeMaximize(schedule.getQuality(),1);
 
   auto start = high_resolution_clock::now();
-  bool r = solver.Solve(&db,col,firstlim);
+  bool r = solver.Solve(&db,col,firstlim,obj);
 
   Solution sol;
   while(duration_cast<milliseconds>(high_resolution_clock::now() - start).count() < timeout) {
@@ -57,7 +57,7 @@ int main(int argc,char **argv) {
     }
     ConstructNeighbour nhSearch(sol.quality+1, sol, &db, solver);
 
-    r = solver.Solve(&nhSearch, col, nhlim);
+    r = solver.Solve(&nhSearch, col, nhlim, obj);
   }
 
   return 0;

@@ -61,7 +61,6 @@ public:
   ScheduleBrancher(Schedule &,bool propQual=true,bool propQualTele=true,bool propX=true);
   virtual ~ScheduleBrancher();
   virtual operations_research::Decision* Next(operations_research::Solver* const s) = 0;
-  virtual void reportRefute();
 //protected:
   Schedule &schedule;
   CheckBound checkBound;
@@ -102,29 +101,72 @@ protected:
 class BestTarget : public ScheduleBrancher {
 public:
   struct Eval {
-    Eval(int,int);
+    Eval(int,float);
     int target;
-    int qual;
+    float qual;
   };
 
   BestTarget(Schedule &s,bool propQual=true,bool propQualTele=true, bool propX=true);
   ~BestTarget();
   operations_research::Decision* Next(operations_research::Solver* const s);
-  void reportRefute();
+
+  friend class ConstructNeighbour;
 
 protected:
   std::vector<std::vector<Eval>> evals;
+
+  // Evaluate the targets for the next slot on tele
+  virtual bool evalTargets(int tele) = 0;
+};
+
+class FitnessProp : public ScheduleBrancher {
+public:
+  struct Eval {
+    Eval(int64,int64,float);
+    int64 target;
+    int64 eval;
+    float fitness;
+  };
+
+  FitnessProp(int ,Schedule &s,bool propQual=true,bool propQualTele=true, bool propX=true);
+  ~FitnessProp();
+  operations_research::Decision* Next(operations_research::Solver* const s);
+
+protected:
+  void normaliseFitness(int);
+
+  int power;
+  float totalFitness;
+  std::vector<Eval> fitness;
+};
+
+class PrefixQual : public BestTarget {
+public:
+  PrefixQual(Schedule &,bool,bool,bool);
+  ~PrefixQual();
+  
+protected:
+  bool evalTargets(int);
+};
+
+class PrePostQual : public BestTarget {
+public:
+  PrePostQual(Schedule &,bool,bool,bool);
+  ~PrePostQual();
+  
+protected:
+  bool evalTargets(int);
 };
 
 // Uses the given solution as a prefix, then the given brancher to finish it
 class ConstructNeighbour : public operations_research::DecisionBuilder {
 public:
-  ConstructNeighbour(int64,Solution const &,ScheduleBrancher *,operations_research::Solver &);
+  ConstructNeighbour(int64,Solution const &,BestTarget *,operations_research::Solver &);
   operations_research::Decision* Next(operations_research::Solver* const s);
 protected:
   int64 bound;
   Solution const &solution;
-  ScheduleBrancher *brancher;
+  BestTarget *brancher;
   // The time selected to reschedule
   int64 time;
   // What mode are we in
