@@ -4,7 +4,7 @@
 # run the coplete search with inorder branching on some small instances
 
 SEED=0
-TIMEOUT=150000
+TIMEOUT=300000
 THREADS=4
 CONFIGS='fff ttf fft ttt'
 

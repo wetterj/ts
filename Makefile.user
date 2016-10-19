@@ -81,7 +81,7 @@ $(OBJ_DIR)$Sresults.pb.$O: $(TELESCOPE_DIR)$Sresults.pb.cc
 	$(CCC) $(CFLAGS) $(EXTRA_FLAGS) -c $(TELESCOPE_DIR)$Sresults.pb.cc $(OBJ_OUT)$(OBJ_DIR)$Sresults.pb.$O
 
 # The binaries
-$(BIN_DIR)$ScompleteSearch$E: $(OBJ_DIR)$Sinstance.pb.$O $(OBJ_DIR)$ScompleteSearch.$O $(TELESCOPE_OBJ) $(CP_DEPS)
+$(BIN_DIR)$ScompleteSearch$E: $(OBJ_DIR)$Sresults.pb.$O $(OBJ_DIR)$Sinstance.pb.$O $(OBJ_DIR)$ScompleteSearch.$O $(TELESCOPE_OBJ) $(CP_DEPS)
 	$(CCC) $(CFLAGS) $(EXTRA_FLAGS) $(OBJ_DIR)$ScompleteSearch.$O $(TELESCOPE_OBJ) $(OR_TOOLS_LIBS) $(LD_FLAGS) $(EXE_OUT)$(BIN_DIR)$ScompleteSearch$E
 
 $(BIN_DIR)$Sgreedy$E: $(OBJ_DIR)$Sinstance.pb.$O $(OBJ_DIR)$Sgreedy.$O $(TELESCOPE_OBJ) $(CP_DEPS)
