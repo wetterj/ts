@@ -16,7 +16,7 @@ outdir=experiments/exp2/
 mkdir -p ${outdir}
 
 # generate some instances
-instances=$(bash scripts/mkInstances.sh $SEED instanceDir)
+instances=$(bash scripts/mkInstances.sh ${SEED} ${instanceDir})
 
 # Run all the configurations on all instances
 function runComplete {

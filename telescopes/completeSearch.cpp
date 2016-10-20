@@ -49,6 +49,7 @@ int main(int argc,char **argv) {
   //  cout << instance.getCadence(targ) << " ";
   //cout << endl;
   //cout << endl;
+  //exit(1);
   Schedule schedule(instance, solver);
 
   int64 timeout = atoi(argv[2]);
@@ -86,12 +87,15 @@ int main(int argc,char **argv) {
     r->set_time( duration_cast<microseconds>(now - start).count() / 1000000.f );
     r->set_fails( solver.failures() );
     r->set_qual( schedule.getQuality()->Value() );
+    //cout << schedule.getQuality()->Value() << endl;
+    //cout << solver.failures() << endl;
   }
   if(!lim->Check()) {
     auto now = high_resolution_clock::now();
     auto c = results.mutable_closed();
     c->set_time(duration_cast<microseconds>(now - start).count() / 1000000.f);
     c->set_fails(solver.failures());
+    //cout << "closed with " << solver.failures() << endl;
   }
   fstream output(argv[7+offset], ios::out | ios::trunc | ios::binary);
   results.SerializeToOstream(&output);
