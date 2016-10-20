@@ -454,8 +454,10 @@ FitnessProp::FitnessProp(int p,Schedule &s,bool on,bool teleOn,bool xOn) : Sched
 operations_research::Decision* FitnessProp::Next(operations_research::Solver* const s) {
   // Choose the telescope
   int tele = schedule.chooseTelescope();
-  if(tele < 0)
+  if(tele < 0) {
+    //exit(1);
     return nullptr;
+  }
 
   // Choose the target
   normaliseFitness(tele);
@@ -463,15 +465,28 @@ operations_research::Decision* FitnessProp::Next(operations_research::Solver* co
   float rand = totalFitness * ((float) s->Rand64( numeric_limits<int64>::max() ) / (float) numeric_limits<int64>::max());
   int targ=fitness.begin()->target;
   int eval=fitness.begin()->eval;
+  float fit=0.f;
   float acc=0.f;
   for(auto it=fitness.begin();it != fitness.end();++it) {
     acc += it->fitness;
     if(rand < acc && schedule.getTarget( schedule.nextSlot[tele], tele )->Contains( it->target )) {
       targ = it->target;
       eval = it->eval;
+      fit  = it->fitness;
       break;
     }
   }
+  //int counter=0;
+  ////bool b = false;
+  //for(auto e : fitness)
+  //  if(e.eval > eval && e.target != targ) {
+  //    ++counter;
+  //    //b = true;
+  //    //cout << "not choosing best\n";
+  //    //cout << "fitness was " << fit << endl;
+  //  }
+  ////if(!b) cout << "chose best\n";
+  //cout << "there where " << counter << " better targets\n";
   return s->RevAlloc( new FixObservation(this, targ, tele, eval) );
 }
 
@@ -500,6 +515,9 @@ void FitnessProp::normaliseFitness(int tele) {
     e.fitness = (float) (e.eval - minEval + 1) / (float) (maxEval - minEval + 1);
     e.fitness = pow(e.fitness,power);
   }
+
+  sort(fitness.begin(), fitness.end(),
+       [](FitnessProp::Eval const &l,FitnessProp::Eval const &r) { return l.fitness > r.fitness; });
 
   totalFitness = 0.f;
   for(auto const &e : fitness)
