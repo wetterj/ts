@@ -35,14 +35,14 @@ def closedFails(s):
   fracs=[]
   for (i,(b,r)) in results.iteritems():
     if b.HasField("closed") and r[s].HasField("closed"):
-      fracs.append(float(b.closed.fails) / float(r[s].closed.fails))
+      fracs.append(float(r[s].closed.fails) / float(b.closed.fails))
   return sum(fracs) / float(len(fracs))
 
 def closedTime(s):
   fracs=[]
   for (i,(b,r)) in results.iteritems():
     if b.HasField("closed") and r[s].HasField("closed"):
-      fracs.append(float(b.closed.time) / float(r[s].closed.time))
+      fracs.append(float(r[s].closed.time) / float(b.closed.time))
   return sum(fracs) / float(len(fracs))
 
 def getBestQ(i):
@@ -55,6 +55,7 @@ def getBestQ(i):
 def baseBestQ():
   bestQ=0
   for (i,(r,_)) in results.iteritems():
+    print "looking at " + str(i)
     if r.point[-1].qual == getBestQ(i):
       bestQ = bestQ+1
   return float(bestQ) / float(len(results))
@@ -76,7 +77,7 @@ def failsTo(q,r):
   for p in r.point:
     if p.qual >= q:
       return p.fails
-  return r[-1].fails
+  return r.point[-1].fails
 
 def failsToBaseQ(s):
   fracs=[]
@@ -89,7 +90,7 @@ def timeTo(q,r):
   for p in r.point:
     if p.qual >= q:
       return p.time
-  return r[-1].time
+  return r.point[-1].time
 
 def timeToBaseQ(s):
   fracs=[]
@@ -102,6 +103,7 @@ idx=0
 while idx < len(lines):
   # read an instance
   instanceName = lines[idx].strip()
+  print "reading " + instanceName
   idx=idx+1
   instanceBaseLineFile = lines[idx].strip()
   idx=idx+1
@@ -109,7 +111,8 @@ while idx < len(lines):
   with open(instanceBaseLineFile, "rb") as f:
     baseLineR.ParseFromString(f.read())
 
-  results[instanceName] = (baseLineR,{})
+  if len(baseLineR.point) > 0:
+    results[instanceName] = (baseLineR,{})
 
   # read all alternative methods results
   while idx < len(lines) and lines[idx].strip() != '':
@@ -122,7 +125,9 @@ while idx < len(lines):
     solverResults = results_pb2.Results()
     with open(solverResultsFile, "rb") as f:
       solverResults.ParseFromString(f.read())
-    results[instanceName][1][solverName] = solverResults
+
+    if len(baseLineR.point) > 0:
+      results[instanceName][1][solverName] = solverResults
 
   while idx < len(lines) and lines[idx].strip() == '':
     idx=idx+1
@@ -135,3 +140,24 @@ for s in solvers:
   closeFile.write(s + '\t' + str(nClosed(s)) + "\t" + str(closedFails(s)) + "\t" + str(closedTime(s)) + "\t" + str(bestQ(s)) + "\t" + str(bestQImprove(s)) + "\t" + str(failsToBaseQ(s)) + "\t" + str(timeToBaseQ(s)) + "\n")
 
 closeFile.close()
+
+outfile = open(sys.argv[1] + '/closed-fails-data','w')
+outfile.write('base')
+for s in solvers:
+  outfile.write(' ' + s)
+outfile.write('\n')
+for (i,(b,rs)) in results.iteritems():
+  if b.HasField('closed'):
+    outfile.write(str(b.closed.fails))
+
+    for s in solvers:
+      outfile.write(' ' + str(rs[s].closed.fails))
+    outfile.write('\n')
+outfile.close()
+
+outfile = open(sys.argv[1] + '/closed-fails-plot','w')
+outfile.write('library("ggplot2")\n\n')
+outfile.write('d <- read.csv("' + sys.argv[1] + '/closed-fails-data"' + ', sep=" ")\n')
+outfile.write('plt <- ggplot(d) + scale_x_log10() + scale_y_log10() + geom_abline() + geom_point(aes(x=base, y=ttf, col="upper bound q")) + geom_point(aes(x=base, y=fft, col="upper bound x")) + geom_point(aes(x=base, y=ttt, col="both"))\n')
+outfile.write('ggsave("' + sys.argv[1] + '/closed-fails.pdf", plt)\n')
+outfile.close()

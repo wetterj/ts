@@ -40,7 +40,25 @@ function runComplete {
 
 export -f runComplete
 
-parallel -j ${THREADS} runComplete ${outdir} ::: ${instances} ::: ${TIMEOUT} ::: b r f ::: $(seq ${N_RANDOM}) ::: POWS
+parallel -j ${THREADS} runComplete ${outdir} ::: ${instances} ::: ${TIMEOUT} ::: b r f ::: $(seq ${N_RANDOM}) ::: $POWS
 
 rm -rf $dir
 
+printf "" > ${outdir}/stats-in
+for i in ${instances}; do
+  printf "$(basename $i)\n" >> ${outdir}/stats-in
+  printf "${outdir}/b-1-$(basename $i)\n" >> ${outdir}/stats-in
+  printf "random\n" >> ${outdir}/stats-in
+  for s in $(seq ${N_RANDOM}); do
+    printf "${outdir}/r-${s}-$(basename $i) " >> ${outdir}/stats-in
+  done
+  printf "\n" >> ${outdir}/stats-in
+  for p in ${POWS}; do
+    printf "fitness${p}\n" >> ${outdir}/stats-in
+    for s in $(seq ${N_RANDOM}); do
+        printf "${outdir}/f-${p}-${s}-$(basename $i) " >> ${outdir}/stats-in
+    done
+    printf "\n" >> ${outdir}/stats-in
+  done
+  printf "\n" >> ${outdir}/stats-in
+done
