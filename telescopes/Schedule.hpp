@@ -13,6 +13,7 @@ class Schedule {
 public:
   // Create the model
   Schedule(Instance const &,operations_research::Solver &);
+  ~Schedule();
 
   operations_research::IntVar *getTarget(int,int);
   operations_research::IntVar *getTime(int,int);

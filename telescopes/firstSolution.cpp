@@ -30,27 +30,10 @@ int main(int argc,char **argv) {
   }
   input.close();
 
-  Solver solver("");
-  solver.ReSeed(time(NULL));
+  Solver *solver = new Solver("");
+  solver->ReSeed(time(NULL));
   Instance instance(proto);
-  //for(int tele=0;tele<instance.nTelescopes;++tele) {
-  //  for(int targ=0;targ<instance.nTargets;++targ)
-  //    cout << instance.getGain(tele, targ) << " ";
-  //  cout << endl;
-  //}
-  //cout << endl;
-  //for(int tele=0;tele<instance.nTelescopes;++tele) {
-  //  for(int targ=0;targ<instance.nTargets;++targ)
-  //    cout << instance.getPeriod(tele, targ) << " ";
-  //  cout << endl;
-  //}
-  //cout << endl;
-  //for(int targ=0;targ<instance.nTargets;++targ)
-  //  cout << instance.getCadence(targ) << " ";
-  //cout << endl;
-  //cout << endl;
-  //exit(1);
-  Schedule schedule(instance, solver);
+  Schedule schedule(instance, *solver);
 
   int64 timeout = atoi(argv[2]);
   int power = 1;
@@ -59,33 +42,36 @@ int main(int argc,char **argv) {
   DecisionBuilder *db = nullptr;
 
   if(argv[3][0] == 'b')
-    db = new PrefixQual(schedule,propQual,propTQual,propXQual);
+    db = new PrefixQual(schedule,true,true,true);
   else if(argv[3][0] == 'p')
-    db = new PrePostQual(schedule,propQual,propTQual,propXQual);
+    db = new PrePostQual(schedule,true,true,true);
   else if(argv[3][0] == 'o')
-    db = new InOrder(schedule,propQual,propTQual,propXQual);
+    db = new InOrder(schedule,true,true,true);
   else if(argv[3][0] == 'f') {
     power = atoi(argv[4]);
-    db = new FitnessProp(power,schedule,propQual,propTQual,propXQual);
+    db = new FitnessProp(power,schedule,true,true,true);
   } else
-    db = new RandomTarget(schedule,propQual,propTQual,propXQual);
+    db = new RandomTarget(schedule,true,true,true);
 
-  auto col = schedule.firstSol(solver);
+  auto col = schedule.firstSol(*solver);
+  auto lim = solver->MakeTimeLimit(timeout);
 
   auto start = high_resolution_clock::now();
-  solver.NewSearch(db,col);
+  solver->NewSearch(db,col,lim);
 
-  if(solver.NextSolution()) {
+  if(solver->NextSolution()) {
     auto now = high_resolution_clock::now();
     auto r = results.add_point();
     r->set_time( duration_cast<microseconds>(now - start).count() / 1000000.f );
-    r->set_fails( solver.failures() );
+    r->set_fails( solver->failures() );
     r->set_qual( schedule.getQuality()->Value() );
+    //cout << schedule.getQuality()->Value() << endl;
   }
-  fstream output(argv[5+offset], ios::out | ios::trunc | ios::binary);
+  fstream output(argv[4+offset], ios::out | ios::trunc | ios::binary);
   results.SerializeToOstream(&output);
   output.close();
 
+  delete solver;
   delete db;
 
   return 0;

@@ -130,6 +130,9 @@ Schedule::Schedule(Instance const &i,operations_research::Solver &s) : instance(
   fixedObservations = 0;
 }
 
+Schedule::~Schedule() {
+}
+
 operations_research::IntVar *Schedule::getTarget(int slot,int tele) {
   return x[slot*instance.nTelescopes+tele];
 }
