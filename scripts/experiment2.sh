@@ -21,7 +21,7 @@ instances=$(bash scripts/mkInstances.sh ${SEED} ${instanceDir})
 # Run all the configurations on all instances
 function runComplete {
   # only one seed for non-random
-  if [ $4 == r -o $5 == 1 ]; then
+  if [ $4 == r -o $4 == f -o $5 == 1 ]; then
     # all powers for fitness prop
     if [ $4 == f ]; then
       # only if there is no data

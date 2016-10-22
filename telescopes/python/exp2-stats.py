@@ -61,18 +61,18 @@ while idx < len(lines):
 outfile=open(sys.argv[1] + '/closed-fails','w')
 outfile.write('bestResult')
 for s in solvers:
-  outfile.write(' ' + s + 'Mean ' + s + 'std')
+  outfile.write('\t' + s + 'Mean\t' + s + 'std')
 outfile.write('\n')
-for (i,(b,rs)) in results:
+for (i,(b,rs)) in results.iteritems():
   if b.HasField('closed'):
     outfile.write(str(b.closed.fails))
     for s in solvers:
       sRs=[]
       for x in rs[s]:
         sRs.append(x.closed.fails)
-      outfile.write(' ' + str( float(sum(sRs))/ float(len(sRs)) ))
+      outfile.write('\t' + str( float(sum(sRs))/ float(len(sRs)) ))
       arr = np.array(sRs)
-      outfile.write(' ' + str( np.std(arr) ) )
+      outfile.write('\t' + str( np.std(arr) ) )
     outfile.write('\n')
 outfile.close()
 
