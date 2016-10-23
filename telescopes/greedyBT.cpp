@@ -44,14 +44,14 @@ int main(int argc,char **argv) {
 
   FitnessProp db(phi,schedule,true,true,true);
 
-  auto col = schedule.firstSol(solver);
+  auto col = schedule.lastSol(solver);
   auto nhlim = solver.MakeTimeLimit(nhtimeout);
   auto firstlim = solver.MakeTimeLimit(inittimeout);
 
   auto obj = solver.MakeMaximize(schedule.getQuality(),1);
 
   auto start = high_resolution_clock::now();
-  bool r = solver.Solve(&db,col,firstlim);
+  bool r = solver.Solve(&db,col,firstlim,obj);
 
   Solution sol;
   while(duration_cast<milliseconds>(high_resolution_clock::now() - start).count() < timeout) {
@@ -62,11 +62,11 @@ int main(int argc,char **argv) {
       r->set_time( duration_cast<microseconds>(now - start).count() / 1000000.f );
       r->set_fails( solver.failures() );
       r->set_qual( sol.quality );
-      //cout << sol.quality << endl;
+      cout << sol.quality << endl;
     }
     ConstructNeighbour nhSearch(sol.quality+1, sol, db, solver);
 
-    r = solver.Solve(&nhSearch, col, nhlim);
+    r = solver.Solve(&nhSearch, col, nhlim, obj);
   }
   fstream output(argv[7], ios::out | ios::trunc | ios::binary);
   results.SerializeToOstream(&output);

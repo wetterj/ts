@@ -233,3 +233,14 @@ for (i,(b,rs)) in results.iteritems():
     outfile.write('\n')
 outfile.close()
 
+outfile = open(sys.argv[1] + '/open-time-boxplot-data','w')
+for s in solvers:
+  outfile.write(s + ' ')
+outfile.write('\n')
+for (i,(b,rs)) in results.iteritems():
+  if not b.HasField('closed'):
+    for s in solvers:
+      outfile.write(str(timeTo(b.point[-1].qual,rs[s]) / b.point[-1].time)+' ')
+    outfile.write('\n')
+outfile.close()
+

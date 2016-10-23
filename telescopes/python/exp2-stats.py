@@ -24,6 +24,7 @@ def baseClosed():
 
 idx=0
 while idx < len(lines):
+  keep = True
   # read an instance
   instanceName = lines[idx].strip()
   print "reading " + instanceName
@@ -34,25 +35,30 @@ while idx < len(lines):
   with open(instanceBaseLineFile, "rb") as f:
     baseLineR.ParseFromString(f.read())
 
-  if len(baseLineR.point) > 0:
-    results[instanceName] = (baseLineR,{})
+  if len(baseLineR.point) == 0:
+    keep=False
+  results[instanceName] = (baseLineR,{})
 
   # read all alternative methods results
   while idx < len(lines) and lines[idx].strip() != '':
     solverName = lines[idx].strip()
     solvers.add(solverName)
     idx=idx+1
-    sFiles = lines[idx].strip().split()[1:]
+    sFiles = lines[idx].strip().split()
     sResults = []
     for f in sFiles:
       solverResults = results_pb2.Results()
-      with open(f, "rb") as f:
-        solverResults.ParseFromString(f.read())
+      with open(f, "rb") as fl:
+        solverResults.ParseFromString(fl.read())
+      if len(solverResults.point) == 0:
+        keep=False
       sResults.append(solverResults)
     idx=idx+1
 
-    if len(baseLineR.point) > 0:
-      results[instanceName][1][solverName] = sResults
+    results[instanceName][1][solverName] = sResults
+
+  if not keep:
+    results.pop(instanceName, None)
 
   while idx < len(lines) and lines[idx].strip() == '':
     idx=idx+1
@@ -87,7 +93,7 @@ while idx < len(lines):
 
 # The quality found for each instance
 outfile=open(sys.argv[1] + '/q-brancher-data','w')
-outfile.write('Maximise x')
+outfile.write('MaximiseX')
 for s in solvers:
   outfile.write(' ' + s + 'Mean ' + s + 'stdDev')
 outfile.write('\n')
@@ -98,7 +104,6 @@ for (i,(b,rs)) in results.iteritems():
     for x in rs[s]:
       if len(x.point) > 0:
         sRs.append(x.point[0].qual)
-    print sRs
     outfile.write(' ' + str( float(sum(sRs))/ float(len(sRs)) ))
     arr = np.array(sRs)
     outfile.write(' ' + str( np.std(arr) ) )
