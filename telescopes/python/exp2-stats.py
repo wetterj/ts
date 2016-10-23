@@ -57,24 +57,24 @@ while idx < len(lines):
   while idx < len(lines) and lines[idx].strip() == '':
     idx=idx+1
 
-# For the closed instance, plot the base nodes vs other nodes
-outfile=open(sys.argv[1] + '/closed-fails','w')
-outfile.write('bestResult')
-for s in solvers:
-  outfile.write('\t' + s + 'Mean\t' + s + 'std')
-outfile.write('\n')
-for (i,(b,rs)) in results.iteritems():
-  if b.HasField('closed'):
-    outfile.write(str(b.closed.fails))
-    for s in solvers:
-      sRs=[]
-      for x in rs[s]:
-        sRs.append(x.closed.fails)
-      outfile.write('\t' + str( float(sum(sRs))/ float(len(sRs)) ))
-      arr = np.array(sRs)
-      outfile.write('\t' + str( np.std(arr) ) )
-    outfile.write('\n')
-outfile.close()
+## For the closed instance, plot the base nodes vs other nodes
+#outfile=open(sys.argv[1] + '/closed-fails','w')
+#outfile.write('bestResult')
+#for s in solvers:
+#  outfile.write('\t' + s + 'Mean\t' + s + 'std')
+#outfile.write('\n')
+#for (i,(b,rs)) in results.iteritems():
+#  if b.HasField('closed'):
+#    outfile.write(str(b.closed.fails))
+#    for s in solvers:
+#      sRs=[]
+#      for x in rs[s]:
+#        sRs.append(x.closed.fails)
+#      outfile.write('\t' + str( float(sum(sRs))/ float(len(sRs)) ))
+#      arr = np.array(sRs)
+#      outfile.write('\t' + str( np.std(arr) ) )
+#    outfile.write('\n')
+#outfile.close()
 
 ## Count the closed instances
 #closeFile=open(sys.argv[1] + '/stats',"w")
@@ -84,3 +84,23 @@ outfile.close()
 #  closeFile.write(s + '\t' + str(nClosed(s)) + "\t" + str(closedFails(s)) + "\t" + str(closedTime(s)) + "\t" + str(bestQ(s)) + "\t" + str(bestQImprove(s)) + "\t" + str(failsToBaseQ(s)) + "\t" + str(timeToBaseQ(s)) + "\n")
 #
 #closeFile.close()
+
+# The quality found for each instance
+outfile=open(sys.argv[1] + '/q-brancher-data','w')
+outfile.write('Maximise x')
+for s in solvers:
+  outfile.write(' ' + s + 'Mean ' + s + 'stdDev')
+outfile.write('\n')
+for (i,(b,rs)) in results.iteritems():
+  outfile.write(str(b.point[0].qual))
+  for s in solvers:
+    sRs=[]
+    for x in rs[s]:
+      if len(x.point) > 0:
+        sRs.append(x.point[0].qual)
+    print sRs
+    outfile.write(' ' + str( float(sum(sRs))/ float(len(sRs)) ))
+    arr = np.array(sRs)
+    outfile.write(' ' + str( np.std(arr) ) )
+  outfile.write('\n')
+outfile.close()

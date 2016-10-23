@@ -38,10 +38,10 @@ printf "" > ${outdir}/stats-in
 for i in ${instances}; do
   printf "$(basename $i)\n" >> ${outdir}/stats-in
   printf "${outdir}/fff-$(basename $i)\n" >> ${outdir}/stats-in
-  printf "upperBounQ\n${outdir}/tff-$(basename $i)\n" >> ${outdir}/stats-in
-  printf "upperBounQR\n${outdir}/ftf-$(basename $i)\n" >> ${outdir}/stats-in
-  printf "upperBounQQR\n${outdir}/ttf-$(basename $i)\n" >> ${outdir}/stats-in
-  printf "upperBounX\n${outdir}/fft-$(basename $i)\n" >> ${outdir}/stats-in
+  printf "upperBoundQ\n${outdir}/tff-$(basename $i)\n" >> ${outdir}/stats-in
+  printf "upperBoundQR\n${outdir}/ftf-$(basename $i)\n" >> ${outdir}/stats-in
+  printf "upperBoundQQR\n${outdir}/ttf-$(basename $i)\n" >> ${outdir}/stats-in
+  printf "upperBoundX\n${outdir}/fft-$(basename $i)\n" >> ${outdir}/stats-in
   printf "all\n${outdir}/ttt-$(basename $i)\n" >> ${outdir}/stats-in
   printf "\n" >> ${outdir}/stats-in
 done

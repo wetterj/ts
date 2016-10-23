@@ -156,8 +156,80 @@ for (i,(b,rs)) in results.iteritems():
 outfile.close()
 
 outfile = open(sys.argv[1] + '/closed-fails-plot','w')
-outfile.write('library("ggplot2")\n\n')
-outfile.write('d <- read.csv("' + sys.argv[1] + '/closed-fails-data"' + ', sep=" ")\n')
-outfile.write('plt <- ggplot(d) + scale_x_log10() + scale_y_log10() + geom_abline() + geom_point(aes(x=base, y=ttf, col="upper bound q")) + geom_point(aes(x=base, y=fft, col="upper bound x")) + geom_point(aes(x=base, y=ttt, col="both"))\n')
-outfile.write('ggsave("' + sys.argv[1] + '/closed-fails.pdf", plt)\n')
+outfile.write('library("ggplot2")\n')
+outfile.write('\n')
+outfile.write('d <- read.csv("./closed-fails-data", sep=" ")\n')
+outfile.write('plt <- ggplot(d) + theme(text=element_text(family="Times")) +\n')
+outfile.write('       coord_fixed(0.7) +\n')
+outfile.write('       xlab("No additional propagation search fails") + ylab("Propagation search fails") +\n')
+outfile.write('       #scale_x_continuous(limits=c(1,10e6)) + scale_y_continuous(limits=c(1,10e6)) +\n')
+outfile.write('       scale_x_log10(limits=c(1,10e6)) + scale_y_log10(limits=c(1,10e6)) +\n')
+outfile.write('       geom_abline() + scale_shape_discrete(solid=F) + \n')
+outfile.write('       geom_point(aes(x=base, y=upperBoundQR, shape="Upper bound q_r", col="Upper bound q_r"), size=4) + \n')
+outfile.write('       geom_point(aes(x=base, y=upperBoundQ, shape="Upper bound q", col="Upper bound q"), size=4) + \n')
+outfile.write('       geom_point(aes(x=base, y=upperBoundX, shape="Upper bound x", col="Upper bound x"), size=4) + \n')
+outfile.write('       geom_point(aes(x=base, y=all, shape="All", col="All"), size=4) + guides(color=guide_legend("Configuration"), shape=guide_legend("Configuration"))\n')
+outfile.write('\n')
+outfile.write('ggsave("./closed-fails.pdf", plt) \n')
 outfile.close()
+
+outfile = open(sys.argv[1] + '/closed-time-data','w')
+outfile.write('base')
+for s in solvers:
+  outfile.write(' ' + s)
+outfile.write('\n')
+for (i,(b,rs)) in results.iteritems():
+  if b.HasField('closed'):
+    outfile.write(str(b.closed.time))
+
+    for s in solvers:
+      outfile.write(' ' + str(rs[s].closed.time))
+    outfile.write('\n')
+outfile.close()
+
+outfile = open(sys.argv[1] + '/closed-time-plot','w')
+outfile.write('library("ggplot2")\n')
+outfile.write('\n')
+outfile.write('d <- read.csv("./closed-time-data", sep=" ")\n')
+outfile.write('plt <- ggplot(d) + theme(text=element_text(family="Times")) +\n')
+outfile.write('       coord_fixed(0.7) +\n')
+outfile.write('       xlab("No additional propagation search time (s)") + ylab("Propagation search time (s)") +\n')
+outfile.write('       scale_x_continuous(limits=c(0,17)) + scale_y_continuous(limits=c(0,17)) +\n')
+outfile.write('       #scale_x_log10(limits=c(1,10e6)) + scale_y_log10(limits=c(1,10e6)) +\n')
+outfile.write('       geom_abline() + scale_shape_discrete(solid=F) + \n')
+outfile.write('       geom_point(aes(x=base, y=upperBoundQR, shape="Upper bound q_r", col="Upper bound q_r"), size=4) + \n')
+outfile.write('       geom_point(aes(x=base, y=upperBoundQ, shape="Upper bound q", col="Upper bound q"), size=4) + \n')
+outfile.write('       geom_point(aes(x=base, y=upperBoundX, shape="Upper bound x", col="Upper bound x"), size=4) + \n')
+outfile.write('       geom_point(aes(x=base, y=all, shape="All", col="All"), size=4) + guides(color=guide_legend("Configuration"), shape=guide_legend("Configuration"))\n')
+outfile.write('\n')
+outfile.write('ggsave("./closed-time.pdf", plt) \n')
+outfile.close()
+
+outfile = open(sys.argv[1] + '/open-fails-data','w')
+outfile.write('base')
+for s in solvers:
+  outfile.write(' ' + s)
+outfile.write('\n')
+for (i,(b,rs)) in results.iteritems():
+  if not b.HasField('closed'):
+    outfile.write(str(b.point[-1].fails))
+
+    for s in solvers:
+      outfile.write(' ' + str(failsTo(b.point[-1].qual,rs[s])) )
+    outfile.write('\n')
+outfile.close()
+
+outfile = open(sys.argv[1] + '/open-time-data','w')
+outfile.write('base')
+for s in solvers:
+  outfile.write(' ' + s)
+outfile.write('\n')
+for (i,(b,rs)) in results.iteritems():
+  if not b.HasField('closed'):
+    outfile.write(str(b.point[-1].time))
+
+    for s in solvers:
+      outfile.write(' ' + str(timeTo(b.point[-1].qual,rs[s])) )
+    outfile.write('\n')
+outfile.close()
+

@@ -26,13 +26,13 @@ function runComplete {
     if [ $4 == f ]; then
       # only if there is no data
       if [ ! -f ${1}/$4-$6-$5-$(basename $2) ]; then
-        ./bin/completeSearch $2 $3 $4 $6 f f f ${1}/$4-$6-$5-$(basename $2)
+        ./bin/completeSearch $5 $2 $3 $4 $6 f f f ${1}/$4-$6-$5-$(basename $2)
       fi
     # only one power for non-powered
     elif [ $6 == 1 ]; then
       # only if there is no data
       if [ ! -f ${1}/$4-$5-$(basename $2) ]; then
-        ./bin/completeSearch $2 $3 $4 f f f ${1}/$4-$5-$(basename $2)
+        ./bin/completeSearch $5 $2 $3 $4 f f f ${1}/$4-$5-$(basename $2)
       fi
     fi
   fi
