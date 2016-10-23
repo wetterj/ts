@@ -46,6 +46,9 @@ $(OBJ_DIR)$SfirstSolution.$O: $(TELESCOPE_DIR)$SfirstSolution.cpp
 $(OBJ_DIR)$Sgreedy.$O: $(TELESCOPE_DIR)$Sgreedy.cpp
 	$(CCC) $(CFLAGS) $(EXTRA_FLAGS) -c $(TELESCOPE_DIR)$Sgreedy.cpp $(OBJ_OUT)$(OBJ_DIR)$Sgreedy.$O
 
+$(OBJ_DIR)$SgreedyBT.$O: $(TELESCOPE_DIR)$SgreedyBT.cpp
+	$(CCC) $(CFLAGS) $(EXTRA_FLAGS) -c $(TELESCOPE_DIR)$SgreedyBT.cpp $(OBJ_OUT)$(OBJ_DIR)$SgreedyBT.$O
+
 $(OBJ_DIR)$SgreedyOpt.$O: $(TELESCOPE_DIR)$SgreedyOpt.cpp
 	$(CCC) $(CFLAGS) $(EXTRA_FLAGS) -c $(TELESCOPE_DIR)$SgreedyOpt.cpp $(OBJ_OUT)$(OBJ_DIR)$SgreedyOpt.$O
 
@@ -92,6 +95,9 @@ $(BIN_DIR)$SfirstSolution$E: $(OBJ_DIR)$Sresults.pb.$O $(OBJ_DIR)$Sinstance.pb.$
 
 $(BIN_DIR)$Sgreedy$E: $(OBJ_DIR)$Sinstance.pb.$O $(OBJ_DIR)$Sgreedy.$O $(TELESCOPE_OBJ) $(CP_DEPS)
 	$(CCC) $(CFLAGS) $(EXTRA_FLAGS) $(OBJ_DIR)$Sgreedy.$O $(TELESCOPE_OBJ) $(OR_TOOLS_LIBS) $(LD_FLAGS) $(EXE_OUT)$(BIN_DIR)$Sgreedy$E
+
+$(BIN_DIR)$SgreedyBT$E: $(OBJ_DIR)$Sinstance.pb.$O $(OBJ_DIR)$SgreedyBT.$O $(TELESCOPE_OBJ) $(CP_DEPS)
+	$(CCC) $(CFLAGS) $(EXTRA_FLAGS) $(OBJ_DIR)$SgreedyBT.$O $(TELESCOPE_OBJ) $(OR_TOOLS_LIBS) $(LD_FLAGS) $(EXE_OUT)$(BIN_DIR)$SgreedyBT$E
 
 $(BIN_DIR)$SgreedyOpt$E: $(OBJ_DIR)$Sinstance.pb.$O $(OBJ_DIR)$SgreedyOpt.$O $(TELESCOPE_OBJ) $(CP_DEPS)
 	$(CCC) $(CFLAGS) $(EXTRA_FLAGS) $(OBJ_DIR)$SgreedyOpt.$O $(TELESCOPE_OBJ) $(OR_TOOLS_LIBS) $(LD_FLAGS) $(EXE_OUT)$(BIN_DIR)$SgreedyOpt$E
