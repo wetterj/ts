@@ -161,12 +161,12 @@ protected:
 // Uses the given solution as a prefix, then the given brancher to finish it
 class ConstructNeighbour : public operations_research::DecisionBuilder {
 public:
-  ConstructNeighbour(int64,Solution const &,BestTarget *,operations_research::Solver &);
+  ConstructNeighbour(int64,Solution const &,FitnessProp &,operations_research::Solver &);
   operations_research::Decision* Next(operations_research::Solver* const s);
 protected:
   int64 bound;
   Solution const &solution;
-  BestTarget *brancher;
+  FitnessProp &brancher;
   // The time selected to reschedule
   int64 time;
   // What mode are we in

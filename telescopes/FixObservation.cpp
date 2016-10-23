@@ -374,17 +374,34 @@ protected:
   IntVar *var;
 };
 
-ConstructNeighbour::ConstructNeighbour(int64 bnd,Solution const &sol,BestTarget *b,Solver &solver) 
+class RemoveVal : public Decision {
+public:
+  RemoveVal(int64 b,IntVar *v) : val(b), var(v) {}
+
+  void Apply(Solver* const s) {
+    var->RemoveValue(val);
+  }
+
+  void Refute(Solver* const s) {
+    s->Fail();
+  }
+
+protected:
+  int64 val;
+  IntVar *var;
+};
+
+ConstructNeighbour::ConstructNeighbour(int64 bnd,Solution const &sol,FitnessProp &b,Solver &solver) 
 : bound(bnd), solution(sol), brancher(b)
 {
   // select a time uniformly
-  time = solver.Rand64( brancher->schedule.instance.horizon );
+  time = solver.Rand64( brancher.schedule.instance.horizon );
   boundPosted = false;
   prefixSet = false;
 }
 
 operations_research::Decision* ConstructNeighbour::Next(operations_research::Solver* const s) {
-  Schedule &schedule = brancher->schedule;
+  Schedule &schedule = brancher.schedule;
   if(!boundPosted) {
     boundPosted = true;
     return s->RevAlloc( new LowerBound( bound, schedule.quality ) );
@@ -397,53 +414,16 @@ operations_research::Decision* ConstructNeighbour::Next(operations_research::Sol
     if(slot<0) return nullptr;
     auto now  = schedule.getTime( slot, tele )->Value();
     if(now < time) {
-      brancher->evalTargets(tele);
+      //brancher->evalTargets(tele);
       auto targ = solution.target[ slot*schedule.instance.nTelescopes + tele ];
       auto qual = solution.contribution[ slot*schedule.instance.nTelescopes + tele ];
-      return s->RevAlloc( new FixObservation(brancher, targ, tele, qual) );
+      return s->RevAlloc( new FixObservation(&brancher, targ, tele, qual) );
     }
     prefixSet = true;
 
-    vector<BestTarget::Eval> evals;
-    int64 minQual = numeric_limits<int64>::max();
-    int64 maxQual = numeric_limits<int64>::min();
-    evals.reserve(schedule.instance.nTargets);
-    auto it = schedule.getTarget( slot, tele )->MakeDomainIterator( false );
-    it->Init();
-    while(it->Ok()) {
-      auto target = it->Value();
-      // Exclude current value
-      if(target != solution.target[ slot*schedule.instance.nTelescopes + tele ]) {
-        auto eval   = schedule.evalChoice(tele, target);
-        evals.emplace_back(target, eval);
-        if(eval < minQual)
-          minQual = eval;
-        if(eval > maxQual)
-          maxQual = eval;
-      }
-      it->Next();
-    }
-    delete it;
-    sort( evals.begin(), evals.end(),
-          [](BestTarget::Eval const &l,BestTarget::Eval const &r) { return l.qual > r.qual; } );
-
-    // Assign probabilities
-    vector<float> ps;
-    ps.reserve(evals.size());
-    for(auto const &e : evals)
-      ps.push_back( (float) (e.qual - minQual + 1) / (float) (maxQual - minQual + 1) );
-    float sum=0.f;
-    for(auto p : ps) sum += p;
-    // choose a random target
-    float c = sum * ((float) s->Rand64( numeric_limits<int64>::max() ) / (float) numeric_limits<int64>::max());
-    int idx=0;
-    for(;idx < ps.size() && ps[idx] < c;++idx)
-      c -= ps[idx];
-
-    brancher->evalTargets(tele);
-    return s->RevAlloc( new FixObservation(brancher, evals[idx].target, tele, evals[idx].qual ) );
+    return s->RevAlloc( new RemoveVal( solution.target[ slot*schedule.instance.nTelescopes + tele ], schedule.getTarget( slot, tele ) ) );
   }
-  return brancher->Next(s);
+  return brancher.Next(s);
 }
 
 FitnessProp::Eval::Eval(int64 t,int64 e,float q) : target(t), eval(e), fitness(q) {}
