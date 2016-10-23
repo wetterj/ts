@@ -5,11 +5,11 @@
 SEED=0
 TIMEOUT=150000
 THREADS=4
-N_RANDOM=5
-POWS='1 3 5 10 30 50 100'
+N_RANDOM=10
+POWS='1 3 5 10 30 50 100 150'
 
 # The directory to put the tmp stuff
-dir=$(mktemp -d 'exp1-XXXXX')
+dir=$(mktemp -d 'exp2-XXXXX')
 instanceDir=${dir}/instances
 mkdir ${instanceDir}
 outdir=experiments/exp2/
@@ -40,7 +40,7 @@ function runComplete {
 
 export -f runComplete
 
-parallel -j ${THREADS} runComplete ${outdir} ::: ${instances} ::: ${TIMEOUT} ::: b r f ::: $(seq ${N_RANDOM}) ::: $POWS
+parallel -j ${THREADS} runComplete ${outdir} ::: ${instances} ::: ${TIMEOUT} ::: o b r f ::: $(seq ${N_RANDOM}) ::: $POWS
 
 rm -rf $dir
 
@@ -52,6 +52,9 @@ for i in ${instances}; do
   for s in $(seq ${N_RANDOM}); do
     printf "${outdir}/r-${s}-$(basename $i) " >> ${outdir}/stats-in
   done
+  printf "\n" >> ${outdir}/stats-in
+  printf "order\n" >> ${outdir}/stats-in
+  printf "${outdir}/o-1-$(basename $i) " >> ${outdir}/stats-in
   printf "\n" >> ${outdir}/stats-in
   for p in ${POWS}; do
     printf "fitness${p}\n" >> ${outdir}/stats-in
