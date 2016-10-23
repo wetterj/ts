@@ -6,7 +6,7 @@ SEED=0
 TIMEOUT=150000
 THREADS=4
 N_RANDOM=5
-POWS='1 3 5'
+POWS='1 3 5 10 30 50 100'
 
 # The directory to put the tmp stuff
 dir=$(mktemp -d 'exp1-XXXXX')
@@ -26,13 +26,13 @@ function runComplete {
     if [ $4 == f ]; then
       # only if there is no data
       if [ ! -f ${1}/$4-$6-$5-$(basename $2) ]; then
-        ./bin/completeSearch $2 $3 $4 $6 f f f ${1}/$4-$6-$5-$(basename $2)
+        ./bin/firstSolution $5 $2 $3 $4 $6 ${1}/$4-$6-$5-$(basename $2)
       fi
     # only one power for non-powered
     elif [ $6 == 1 ]; then
       # only if there is no data
       if [ ! -f ${1}/$4-$5-$(basename $2) ]; then
-        ./bin/completeSearch $2 $3 $4 f f f ${1}/$4-$5-$(basename $2)
+        ./bin/firstSolution $5 $2 $3 $4 ${1}/$4-$5-$(basename $2)
       fi
     fi
   fi
