@@ -13,24 +13,34 @@ using namespace chrono;
 
 class Ant {
 public:
-  Ant(Instance const &,int,Pheromone const &,int to);
-  Solution *solve();
+  Ant(Instance const &,int,Pheromone const &,int to,int nhTo,int antID);
+  void solve(int n);
+  void greedy(Solution &,int);
+
+  vector<Solution*> solutions;
 protected:
   Solver solver;
   Schedule schedule;
   ACOBrancher acoBrancher;
-  SearchLimit *limit;
+  BestTarget greedyBrancher;
+  SearchLimit *initLimit;
+  SearchLimit *nhLimit;
   OptimizeVar *obj;
   SolutionCollector *col;
+  SolutionCollector *firstSol;
 };
 
-Ant::Ant(Instance const &instance,int power,Pheromone const &phero,int to) : solver("ant"), schedule(instance,solver), acoBrancher(power,schedule,phero)
+
+Ant::Ant(Instance const &instance,int power,Pheromone const &phero,int to,int nhto,int seed) : solver("ant"), schedule(instance,solver), acoBrancher(power,schedule,phero), greedyBrancher(schedule,true,true,true)
 {
-  limit = solver.MakeTimeLimit(to);
+  initLimit = solver.MakeTimeLimit(to);
+  nhLimit   = solver.MakeTimeLimit(nhto);
   obj = solver.MakeMaximize(schedule.getQuality(),1);
   col = schedule.lastSol(solver);
-  solver.ReSeed(time(NULL));
+  firstSol = schedule.firstSol(solver);
+  solver.ReSeed(seed);
 }
+
 
 Solution *Ant::solve() {
   bool r = solver.Solve(&acoBrancher, limit, obj, col);
@@ -46,7 +56,7 @@ Solution *Ant::solve() {
 int main(int argc,char **argv) {
   GOOGLE_PROTOBUF_VERIFY_VERSION;
   if(argc != 8) {
-    cerr << "usage: aco <instance> <timeout> <ant-timeout> <power> <n-ants> <rho> <threads>\n";
+    cerr << "usage: aco <seed> <instance> <timeout> <ant-timeout> <phi> <n-ants> <rho> <threads>\n";
     exit(1);
   }
 
@@ -66,14 +76,10 @@ int main(int argc,char **argv) {
   int64 pow        = atoi(argv[4]);
   int64 nAnts      = atoi(argv[5]);
   float rho        = atof(argv[6]);
-  int64 threads    = atoi(argv[7]);
 
   Pheromone pheromone(instance);
 
-  vector<Ant*> ants;
-  ants.reserve(threads);
-  for(int a=0;a<threads;++a)
-    ants[a] = new Ant(instance,pow,pheromone,anttimeout);
+  Ant ant(instance,phi,pheromone,anttimeout);
 
   vector<Solution*> solutions;
   solutions.reserve(nAnts);

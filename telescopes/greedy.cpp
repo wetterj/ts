@@ -62,7 +62,7 @@ int main(int argc,char **argv) {
       r->set_time( duration_cast<microseconds>(now - start).count() / 1000000.f );
       r->set_fails( solver.failures() );
       r->set_qual( sol.quality );
-      //cout << sol.quality << endl;
+      cout << sol.quality << endl;
     }
     ConstructNeighbour nhSearch(sol.quality+1, sol, db, solver);
 
