@@ -87,7 +87,7 @@ int main(int argc,char **argv) {
     r->set_time( duration_cast<microseconds>(now - start).count() / 1000000.f );
     r->set_fails( solver.failures() );
     r->set_qual( schedule.getQuality()->Value() );
-    //cout << schedule.getQuality()->Value() << endl;
+    cout << schedule.getQuality()->Value() << endl;
     //cout << solver.failures() << endl;
   }
   if(!lim->Check()) {
