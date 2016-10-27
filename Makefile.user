@@ -52,8 +52,8 @@ $(OBJ_DIR)$SgreedyBT.$O: $(TELESCOPE_DIR)$SgreedyBT.cpp
 $(OBJ_DIR)$SgreedyOpt.$O: $(TELESCOPE_DIR)$SgreedyOpt.cpp
 	$(CCC) $(CFLAGS) $(EXTRA_FLAGS) -c $(TELESCOPE_DIR)$SgreedyOpt.cpp $(OBJ_OUT)$(OBJ_DIR)$SgreedyOpt.$O
 
-$(OBJ_DIR)$SsimulatedAnnealing1.$O: $(TELESCOPE_DIR)$SsimulatedAnnealing1.cpp
-	$(CCC) $(CFLAGS) $(EXTRA_FLAGS) -c $(TELESCOPE_DIR)$SsimulatedAnnealing1.cpp $(OBJ_OUT)$(OBJ_DIR)$SsimulatedAnnealing1.$O
+$(OBJ_DIR)$SsimulatedAnnealing.$O: $(TELESCOPE_DIR)$SsimulatedAnnealing.cpp
+	$(CCC) $(CFLAGS) $(EXTRA_FLAGS) -c $(TELESCOPE_DIR)$SsimulatedAnnealing.cpp $(OBJ_OUT)$(OBJ_DIR)$SsimulatedAnnealing.$O
 
 $(OBJ_DIR)$SsimulatedAnnealing2.$O: $(TELESCOPE_DIR)$SsimulatedAnnealing2.cpp
 	$(CCC) $(CFLAGS) $(EXTRA_FLAGS) -c $(TELESCOPE_DIR)$SsimulatedAnnealing2.cpp $(OBJ_OUT)$(OBJ_DIR)$SsimulatedAnnealing2.$O
@@ -102,8 +102,8 @@ $(BIN_DIR)$SgreedyBT$E: $(OBJ_DIR)$Sinstance.pb.$O $(OBJ_DIR)$SgreedyBT.$O $(TEL
 $(BIN_DIR)$SgreedyOpt$E: $(OBJ_DIR)$Sinstance.pb.$O $(OBJ_DIR)$SgreedyOpt.$O $(TELESCOPE_OBJ) $(CP_DEPS)
 	$(CCC) $(CFLAGS) $(EXTRA_FLAGS) $(OBJ_DIR)$SgreedyOpt.$O $(TELESCOPE_OBJ) $(OR_TOOLS_LIBS) $(LD_FLAGS) $(EXE_OUT)$(BIN_DIR)$SgreedyOpt$E
 
-$(BIN_DIR)$SsimulatedAnnealing1$E: $(OBJ_DIR)$Sinstance.pb.$O $(OBJ_DIR)$SsimulatedAnnealing1.$O $(TELESCOPE_OBJ) $(CP_DEPS)
-	$(CCC) $(CFLAGS) $(EXTRA_FLAGS) $(OBJ_DIR)$SsimulatedAnnealing1.$O $(TELESCOPE_OBJ) $(OR_TOOLS_LIBS) $(LD_FLAGS) $(EXE_OUT)$(BIN_DIR)$SsimulatedAnnealing1$E
+$(BIN_DIR)$SsimulatedAnnealing$E: $(OBJ_DIR)$Sinstance.pb.$O $(OBJ_DIR)$SsimulatedAnnealing.$O $(TELESCOPE_OBJ) $(CP_DEPS)
+	$(CCC) $(CFLAGS) $(EXTRA_FLAGS) $(OBJ_DIR)$SsimulatedAnnealing.$O $(TELESCOPE_OBJ) $(OR_TOOLS_LIBS) $(LD_FLAGS) $(EXE_OUT)$(BIN_DIR)$SsimulatedAnnealing$E
 
 $(BIN_DIR)$SsimulatedAnnealing2$E: $(OBJ_DIR)$Sinstance.pb.$O $(OBJ_DIR)$SsimulatedAnnealing2.$O $(TELESCOPE_OBJ) $(CP_DEPS)
 	$(CCC) $(CFLAGS) $(EXTRA_FLAGS) $(OBJ_DIR)$SsimulatedAnnealing2.$O $(TELESCOPE_OBJ) $(OR_TOOLS_LIBS) $(LD_FLAGS) $(EXE_OUT)$(BIN_DIR)$SsimulatedAnnealing2$E
