@@ -49,6 +49,22 @@ parallel -j ${THREADS} runACO ${outdir} ::: ${instances} ::: ${TIMEOUT} ::: ${IN
 
 rm -rf $dir
 
+printf "" > ${outdir}/stats-in
+for i in ${instances}; do
+  for nh in ${NH_TOS}; do
+    for phi in ${PHIS}; do
+      for nAnts in ${N_ANTS}; do
+        for rho in ${RHO}; do
+          printf "${nAnts} ${rho} $(basename $i)" >> ${outdir}/stats-in
+          for s in $SEEDS; do
+            printf " ${outdir}/${nh}-${phi}-${nAnts}-${rho}-${s}-$(basename $i)" >> ${outdir}/stats-in
+          done
+          printf "\n" >> ${outdir}/stats-in
+        done
+      done
+    done
+  done
+done
 #printf "" > ${outdir}/stats-in
 #for i in ${instances}; do
 #  printf "$(basename $i)\n" >> ${outdir}/stats-in

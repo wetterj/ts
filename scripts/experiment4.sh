@@ -49,9 +49,22 @@ parallel -j ${THREADS} runSA ${outdir} ::: ${instances} ::: ${TIMEOUT} ::: ${INI
 
 rm -rf $dir
 
-#printf "" > ${outdir}/stats-in
-#for i in ${instances}; do
-#  printf "$(basename $i)\n" >> ${outdir}/stats-in
+printf "" > ${outdir}/stats-in
+for i in ${instances}; do
+  for nh in ${NH_TOS}; do
+    for phi in ${PHIS}; do
+      for initTmp in ${INIT_TEMP}; do
+        for cr in ${COOL_RATE}; do
+          printf "${initTmp} ${cr} $(basename $i)" >> ${outdir}/stats-in
+          for s in $SEEDS; do
+            printf " ${outdir}/${nh}-${phi}-${initTmp}-${cr}-${s}-$(basename $i)" >> ${outdir}/stats-in
+          done
+          printf "\n" >> ${outdir}/stats-in
+        done
+      done
+    done
+  done
+done
 #  printf "${outdir}/fff-$(basename $i)\n" >> ${outdir}/stats-in
 #  printf "upperBoundQ\n${outdir}/tff-$(basename $i)\n" >> ${outdir}/stats-in
 #  printf "upperBoundQR\n${outdir}/ftf-$(basename $i)\n" >> ${outdir}/stats-in
