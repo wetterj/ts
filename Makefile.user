@@ -7,10 +7,10 @@ TELESCOPE_OBJ= $(OBJ_DIR)$SInstance.$O \
 							 $(OBJ_DIR)$SFixObservation.$O \
 							 $(OBJ_DIR)$SUpperBoundX.$O \
 							 $(OBJ_DIR)$SPheromone.$O \
-							 $(OBJ_DIR)$SACOBrancher.$O \
 						   $(OBJ_DIR)$Sinstance.pb.$O \
 						   $(OBJ_DIR)$Ssolution.pb.$O \
 							 $(OBJ_DIR)$Sresults.pb.$O
+							 #$(OBJ_DIR)$SACOBrancher.$O \
 
 EXTRA_FLAGS= -O0 -g
 #EXTRA_FLAGS=
@@ -34,8 +34,8 @@ $(OBJ_DIR)$SUpperBoundX.$O: $(TELESCOPE_DIR)$SUpperBoundX.cpp $(TELESCOPE_DIR)$S
 $(OBJ_DIR)$SPheromone.$O: $(TELESCOPE_DIR)$SPheromone.cpp $(TELESCOPE_DIR)$SPheromone.hpp
 	$(CCC) $(CFLAGS) $(EXTRA_FLAGS) -c $(TELESCOPE_DIR)$SPheromone.cpp $(OBJ_OUT)$(OBJ_DIR)$SPheromone.$O
 
-$(OBJ_DIR)$SACOBrancher.$O: $(TELESCOPE_DIR)$SACOBrancher.cpp $(TELESCOPE_DIR)$SACOBrancher.hpp
-	$(CCC) $(CFLAGS) $(EXTRA_FLAGS) -c $(TELESCOPE_DIR)$SACOBrancher.cpp $(OBJ_OUT)$(OBJ_DIR)$SACOBrancher.$O
+#$(OBJ_DIR)$SACOBrancher.$O: $(TELESCOPE_DIR)$SACOBrancher.cpp $(TELESCOPE_DIR)$SACOBrancher.hpp
+#	$(CCC) $(CFLAGS) $(EXTRA_FLAGS) -c $(TELESCOPE_DIR)$SACOBrancher.cpp $(OBJ_OUT)$(OBJ_DIR)$SACOBrancher.$O
 
 $(OBJ_DIR)$ScompleteSearch.$O: $(TELESCOPE_DIR)$ScompleteSearch.cpp
 	$(CCC) $(CFLAGS) $(EXTRA_FLAGS) -c $(TELESCOPE_DIR)$ScompleteSearch.cpp $(OBJ_OUT)$(OBJ_DIR)$ScompleteSearch.$O

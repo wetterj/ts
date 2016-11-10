@@ -1,12 +1,12 @@
 #include <fstream>
 #include <chrono>
-#include <thread>
 
 #include "constraint_solver/constraint_solver.h"
 
 #include "instance.pb.h"
+#include "results.pb.h"
 #include "Schedule.hpp"
-#include "ACOBrancher.hpp"
+#include "FixObservation.hpp"
 
 using namespace std;
 using namespace operations_research;
@@ -14,80 +14,64 @@ using namespace chrono;
 
 class Ant {
 public:
-  Ant(Instance const &,int,Pheromone const &,int to,int nhTo,int antID);
-  void solve(int n);
-  void greedy(Solution &,int);
+  Ant(Instance const &,int,Pheromone const &,int antTo,int nhTimeout,int antID,int seed);
+  void solve(int n,vector<Solution> &);
+  void greedy(Solution &sol,int ss);
 
-  vector<Solution*> solutions;
+  //vector<Solution*> solutions;
 protected:
+  int antID;
   Solver solver;
   Schedule schedule;
   ACOBrancher acoBrancher;
-  BestTarget greedyBrancher;
-  SearchLimit *initLimit;
+  SearchLimit *antLimit;
   SearchLimit *nhLimit;
-  OptimizeVar *obj;
   SolutionCollector *col;
-  SolutionCollector *firstSol;
 };
 
-Ant::Ant(Instance const &instance,int power,Pheromone const &phero,int to,int nhto,int antID) : solver("ant"), schedule(instance,solver), acoBrancher(power,schedule,phero), greedyBrancher(schedule,true,true,true)
+
+Ant::Ant(Instance const &instance,int phi,Pheromone const &phero,int antTo,int nhTo,int id,int seed) : antID(id), solver("ant"), schedule(instance,solver), acoBrancher(phi,schedule,phero)
 {
-  initLimit = solver.MakeTimeLimit(to);
-  nhLimit   = solver.MakeTimeLimit(nhto);
-  obj = solver.MakeMaximize(schedule.getQuality(),1);
-  col = schedule.lastSol(solver);
-  firstSol = schedule.firstSol(solver);
-  solver.ReSeed(time(NULL) + antID);
+  antLimit = solver.MakeTimeLimit(antTo);
+  nhLimit  = solver.MakeTimeLimit(nhTo);
+  col      = schedule.firstSol(solver);
+  solver.ReSeed(seed + antID);
 }
 
-// run the solver n times
-void Ant::solve(int n) {
+void Ant::solve(int n,vector<Solution> &solutions) {
   for(int i=0;i<n;++i) {
-    //bool r = solver.Solve(&acoBrancher, initLimit, obj, col);
-    //if(r && col->solution_count() == 1) {
-    //  solutions.push_back( new Solution() );
-    //  schedule.assignmentToSolution(col->solution(0), *solutions.back());
-    //  cout << "got " << solutions.back()->quality << endl;
-    //}
-    bool r = solver.Solve(&acoBrancher, initLimit, firstSol);
-    if(r && firstSol->solution_count() == 1) {
-      solutions.push_back( new Solution() );
-      schedule.assignmentToSolution(firstSol->solution(0), *solutions.back());
-      cout << "got " << solutions.back()->quality << endl;
+    bool r = solver.Solve(&acoBrancher, antLimit, col);
+    if(r && col->solution_count() == 1) {
+      Solution *sol = new Solution();
+      schedule.assignmentToSolution(col->solution(0), solutions[n*antID + i]);
+    } else {
+      cerr << "opps\n";
     }
   }
 }
 
-// search its greedy iterations on sol
-void Ant::greedy(Solution &sol, int its) {
-  bool r = false;
-  int i=0;
-  while(i < its) {
-    //cout << sol.quality << endl;
-    //cout << sol.target[0] << endl;
-    ConstructNeighbour nhSearch(sol.quality+1, sol, &greedyBrancher, solver);
-
-    r = solver.Solve(&nhSearch, col, nhLimit, obj);
-    ++i;
-
+void Ant::greedy(Solution &sol,int n) {
+  for(int i=0;i<n;++i) {
+    ConstructNeighbour nhSearch(sol.quality+1, sol, acoBrancher, solver);
+    bool r = solver.Solve(&nhSearch, col, nhLimit);
     if(r && col->solution_count() == 1) {
       schedule.assignmentToSolution( col->solution(0), sol );
-      cout << "nh got " << sol.quality << endl;
+      cout << "greedy got " << sol.quality << endl;
     }
   }
 }
 
 int main(int argc,char **argv) {
   GOOGLE_PROTOBUF_VERIFY_VERSION;
-  if(argc != 9) {
-    cerr << "usage: aco-greedy <instance> <timeout> <init-timeout> <nh-timeout> <power> <n-ants> <rho> <n-threads>\n";
+  if(argc != 12) {
+    cerr << "usage: aco <seed> <instance> <timeout> <ant-timeout> <phi> <n-ants> <rho> <n-greedy> <nhTimeout> <nhSearches> <outfile>\n";
     exit(1);
   }
 
   InstanceProto proto;
+  Results results;
 
-  fstream input(argv[1], ios::in | ios::binary);
+  fstream input(argv[2], ios::in | ios::binary);
   if(!proto.ParseFromIstream(&input)) {
     cerr << "Could not parse the protobuf\n";
     exit(1);
@@ -95,63 +79,50 @@ int main(int argc,char **argv) {
 
   Instance instance(proto);
 
-  int64 timeout    = atoi(argv[2]);
-  int64 initimeout = atoi(argv[3]);
-  int64 nhtimeout  = atoi(argv[4]);
-  int64 pow        = atoi(argv[5]);
+  int64 seed       = atoi(argv[1]);
+  int64 timeout    = atoi(argv[3]);
+  int64 anttimeout = atoi(argv[4]);
+  int64 phi        = atoi(argv[5]);
   int64 nAnts      = atoi(argv[6]);
   float rho        = atof(argv[7]);
-  int64 nThreads   = atoi(argv[8]);
+  int64 nGreedy    = atoi(argv[8]);
+  int64 nhTimeout  = atoi(argv[9]);
+  int64 nhSearches = atoi(argv[10]);
 
   Pheromone pheromone(instance);
 
-  vector<Ant*> ants;
-  ants.reserve(nThreads);
-  for(int a=0;a<nThreads;++a)
-    ants[a] = new Ant(instance,pow,pheromone,initimeout,nhtimeout,a);
+  Ant ant(instance,phi,pheromone,anttimeout,nhTimeout,0,seed);
 
-  vector<Solution*> solutions;
-  solutions.reserve(nAnts);
+  vector<Solution> solutions(nAnts);
+  //solutions.reserve(nAnts);
   Solution best;
   best.quality = -1;
 
   auto start = high_resolution_clock::now();
 
-  vector<thread> threads;
-
   while(duration_cast<milliseconds>(high_resolution_clock::now() - start).count() < timeout) {
-    // Run the ants
-    for(int thread=0;thread < nThreads;++thread) {
-      threads.emplace_back( &Ant::solve, ants[thread], (int) ceil((float) nAnts/nThreads) );
-    }
-    for(int thread=0;thread < nThreads;++thread) {
-      threads[thread].join();
-      solutions.insert(solutions.end(), ants[thread]->solutions.begin(), ants[thread]->solutions.end());
-      ants[thread]->solutions.clear();
-    }
-    threads.clear();
-    if(best.quality > 0) solutions.push_back(new Solution(best));
-    // apply the greedy nh to the best solutions
+    solutions.resize(nAnts);
+    // TODO: run the ants in different threads
+    ant.solve(nAnts,solutions);
+    //solutions.insert(solutions.begin(), ant.solutions.begin(), ant.solutions.end());
+    if(best.quality >= 0)
+      solutions.push_back(best);
+    //ant.solutions.clear();
     sort(solutions.begin(), solutions.end(),
-         [](Solution const *l, Solution const *r) { return l->quality > r->quality; });
-
-    if(solutions.size() > 0) {
-      for(int thread=0;thread < nThreads && thread < solutions.size();++thread) {
-        threads.emplace_back( &Ant::greedy, ants[thread], ref(*solutions[thread]), 10 );
-      }
-      for(int thread=0;thread < nThreads;++thread) {
-        threads[thread].join();
-      }
-      threads.clear();
+         [](Solution const &l, Solution const &r) { return l.quality > r.quality; });
+    // apply greedy to the best nGreedy solutions
+    for(int i=0;i<nGreedy && i<solutions.size();++i) {
+      ant.greedy(solutions[i], nhSearches);
     }
     // update best solution
-    for(auto s : solutions)
-      if(s->quality > best.quality) {
-        best = *s;
+    for(auto &s : solutions) {
+      if(s.quality > best.quality) {
+        best = s;
         auto now = high_resolution_clock::now();
         cout << "t: " << duration_cast<microseconds>(now - start).count() / 1000000.f << endl;
-        cout << "q: " << best.quality << endl;
+        cout << "q: " << s.quality << endl;
       }
+    }
     // update pheromones
     // evaporate
     for(int tele=0;tele<instance.nTelescopes;++tele)
@@ -160,41 +131,28 @@ int main(int argc,char **argv) {
           pheromone.updatePeromone( tele, slot, targ,
                                     pheromone.getPheromone( tele, slot, targ )*(1.f - rho) );
     // increase for solutions
-    for(auto sol : solutions) {
-      for(int tele=0;tele<instance.nTelescopes;++tele) {
+    for(auto &sol : solutions)
+      for(int tele=0;tele<instance.nTelescopes;++tele)
         for(int slot=0;slot<instance.nSlots;++slot) {
-          int targ = sol->target[ slot*instance.nTelescopes + tele ];
+          int targ = sol.target[ slot*instance.nTelescopes + tele ];
           pheromone.updatePeromone( tele, slot, targ,
-                                    pheromone.getPheromone( tele, slot, targ ) + (float) sol->quality / (float) best.quality );
+                                    pheromone.getPheromone( tele, slot, targ ) + rho * (float) sol.quality / (float) best.quality );
         }
-      }
-    }
 
-    //// increase for best solution
-    //if(best.quality > 0)
-    //  for(int tele=0;tele<instance.nTelescopes;++tele)
-    //    for(int slot=0;slot<instance.nSlots;++slot) {
-    //      int targ = best.target[ slot*instance.nTelescopes + tele ];
-    //      pheromone.updatePeromone( tele, slot, targ,
-    //                                pheromone.getPheromone( tele, slot, targ ) + 1.f );
-    //    }
+    // increase for best solution
+    if(best.quality > 0)
+      for(int tele=0;tele<instance.nTelescopes;++tele)
+        for(int slot=0;slot<instance.nSlots;++slot) {
+          int targ = best.target[ slot*instance.nTelescopes + tele ];
+          pheromone.updatePeromone( tele, slot, targ,
+                                    pheromone.getPheromone( tele, slot, targ ) + rho );
+        }
 
-    for(auto s : solutions) delete s;
-    solutions.clear();
-
-    //for(int64 tele=0;tele < instance.nTelescopes;++tele) {
-    //  cout << "tele " << tele << endl;
-    //  for(int64 slot=0;slot < instance.nSlots;++slot) {
-    //    cout << "slot " << slot << endl;
-    //    for(int64 target=0;target < instance.nTargets;++target)
-    //      cout << pheromone.getPheromone(tele, slot, target) << " ";
-    //    cout << endl;
-    //  }
-    //  cout << endl;
-    //}
+    //for(auto s : solutions) delete s;
+    //solutions.clear();
   }
 
-  for(auto a : ants) delete a;
+  //for(auto a : ants) delete a;
 
   return 0;
 }

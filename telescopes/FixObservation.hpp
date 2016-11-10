@@ -5,6 +5,7 @@
 
 #include "Schedule.hpp"
 #include "UpperBoundX.hpp"
+#include "Pheromone.hpp"
 
 class CheckBound {
 public:
@@ -133,11 +134,20 @@ public:
   operations_research::Decision* Next(operations_research::Solver* const s);
 
 protected:
-  void normaliseFitness(int);
+  virtual void normaliseFitness(int);
 
   int power;
   float totalFitness;
   std::vector<Eval> fitness;
+};
+
+class ACOBrancher : public FitnessProp {
+public:
+  ACOBrancher(int,Schedule &,Pheromone const &);
+protected:
+  void normaliseFitness(int);
+
+  Pheromone const &pheromone;
 };
 
 class PrefixQual : public BestTarget {

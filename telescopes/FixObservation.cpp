@@ -505,3 +505,20 @@ void FitnessProp::normaliseFitness(int tele) {
 }
 
 FitnessProp::~FitnessProp() {}
+
+ACOBrancher::ACOBrancher(int p,Schedule &s,Pheromone const &phe) : FitnessProp(p,s,true,true,true), pheromone(phe)
+{
+}
+
+void ACOBrancher::normaliseFitness(int tele) {
+  // Get the fitness from current state
+  FitnessProp::normaliseFitness(tele);
+  // Multiply by phero
+  for(auto &e : fitness)
+    e.fitness *= pheromone.getPheromone( tele, schedule.nextSlot[tele], e.target );
+  // recompute total fitness
+  totalFitness = 0.f;
+  for(auto const &e : fitness)
+    totalFitness += e.fitness;
+}
+
