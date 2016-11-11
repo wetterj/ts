@@ -119,8 +119,10 @@ int main(int argc,char **argv) {
       if(s.quality > best.quality) {
         best = s;
         auto now = high_resolution_clock::now();
-        cout << "t: " << duration_cast<microseconds>(now - start).count() / 1000000.f << endl;
-        cout << "q: " << s.quality << endl;
+        auto r = results.add_point();
+        r->set_time( duration_cast<microseconds>(now - start).count() / 1000000.f );
+        r->set_fails( 0 );
+        r->set_qual( best.quality );
       }
     }
     // update pheromones
@@ -151,6 +153,10 @@ int main(int argc,char **argv) {
     //for(auto s : solutions) delete s;
     //solutions.clear();
   }
+
+  fstream output(argv[8], ios::out | ios::trunc | ios::binary);
+  results.SerializeToOstream(&output);
+  output.close();
 
   //for(auto a : ants) delete a;
 
