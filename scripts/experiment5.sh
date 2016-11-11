@@ -5,8 +5,7 @@
 SEED=0
 TIMEOUT=600000
 THREADS=4
-INIT_TOS='1000'
-NH_TOS='500'
+ANT_TOS='500'
 PHIS='100'
 N_ANTS='4 8 16 32'
 RHO='0.1 0.2 0.3'
@@ -31,27 +30,26 @@ function runACO {
   outd=$1
   inst=$2
   to=$3
-  init_to=$4
-  nh_to=$5
-  phi=$6
-  n_ants=$7
-  rho=$8
-  seed=$9
-  outFile=${outd}/${nh_to}-${phi}-${n_ants}-${rho}-${seed}-$(basename ${inst})
+  ant_to=$4
+  phi=$5
+  n_ants=$6
+  rho=$7
+  seed=$8
+  outFile=${outd}/${ant_to}-${phi}-${n_ants}-${rho}-${seed}-$(basename ${inst})
   if [ ! -f ${outFile} ]; then
-    ./bin/aco ${seed} ${inst} ${to} ${init_to} ${nh_to} ${phi} ${n_ants} ${rho} ${outFile}
+    ./bin/aco ${seed} ${inst} ${to} ${ant_to} ${phi} ${n_ants} ${rho} ${outFile}
   fi
 }
 
 export -f runACO
 
-parallel -j ${THREADS} runACO ${outdir} ::: ${instances} ::: ${TIMEOUT} ::: ${INIT_TOS} ::: ${NH_TOS} ::: ${PHIS} ::: ${N_ANTS} ::: ${RHO} ::: ${SEEDS}
+parallel -j ${THREADS} runACO ${outdir} ::: ${instances} ::: ${TIMEOUT} ::: ${ANT_TOS} ::: ${PHIS} ::: ${N_ANTS} ::: ${RHO} ::: ${SEEDS}
 
 rm -rf $dir
 
 printf "" > ${outdir}/stats-in
 for i in ${instances}; do
-  for nh in ${NH_TOS}; do
+  for nh in ${ANT_TOS}; do
     for phi in ${PHIS}; do
       for nAnts in ${N_ANTS}; do
         for rho in ${RHO}; do
