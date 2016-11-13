@@ -8,7 +8,7 @@ THREADS=4
 ANT_TOS='500'
 PHIS='100'
 N_ANTS='4 8 16 32'
-RHO='0.1 0.2 0.3'
+RHO='0.05 0.1 0.15 0.2 0.25 0.3'
 SEEDS=$(seq 5)
 
 # The directory to put the tmp stuff
