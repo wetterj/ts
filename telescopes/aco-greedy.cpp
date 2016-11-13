@@ -56,7 +56,7 @@ void Ant::greedy(Solution &sol,int n) {
     bool r = solver.Solve(&nhSearch, col, nhLimit);
     if(r && col->solution_count() == 1) {
       schedule.assignmentToSolution( col->solution(0), sol );
-      cout << "greedy got " << sol.quality << endl;
+      //cout << "greedy got " << sol.quality << endl;
     }
   }
 }
@@ -64,7 +64,7 @@ void Ant::greedy(Solution &sol,int n) {
 int main(int argc,char **argv) {
   GOOGLE_PROTOBUF_VERIFY_VERSION;
   if(argc != 12) {
-    cerr << "usage: aco <seed> <instance> <timeout> <ant-timeout> <phi> <n-ants> <rho> <n-greedy> <nhTimeout> <nhSearches> <outfile>\n";
+    cerr << "usage: aco-greedy <seed> <instance> <timeout> <ant-timeout> <phi> <n-ants> <rho> <n-greedy> <nhTimeout> <nhSearches> <outfile>\n";
     exit(1);
   }
 
@@ -154,7 +154,7 @@ int main(int argc,char **argv) {
     //solutions.clear();
   }
 
-  fstream output(argv[8], ios::out | ios::trunc | ios::binary);
+  fstream output(argv[11], ios::out | ios::trunc | ios::binary);
   results.SerializeToOstream(&output);
   output.close();
 

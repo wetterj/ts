@@ -9,16 +9,16 @@ ANT_TOS='500'
 PHIS='100'
 N_ANTS='32'
 RHO='0.1'
-N_LOCALS='2 4 6'
+N_LOCALS='2 3 4 5 6'
 NH_TO=500
-N_ITERS='5 10 15'
+N_ITERS='5 7 9 11 13 15'
 SEEDS=$(seq 5)
 
 # The directory to put the tmp stuff
-dir=$(mktemp -d 'exp5-XXXXX')
+dir=$(mktemp -d 'exp6-XXXXX')
 instanceDir=${dir}/instances
 mkdir ${instanceDir}
-outdir=experiments/exp5/
+outdir=experiments/exp6/
 mkdir -p ${outdir}
 
 # generate some instances
@@ -39,17 +39,17 @@ function runACOGreedy {
   rho=$7
   nLocals=$8
   nhTimeout=$9
-  nhIters=$10
-  seed=$11
+  nhIters=${10}
+  seed=${11}
   outFile=${outd}/${ant_to}-${phi}-${n_ants}-${rho}-${nLocals}-${nhIters}-${seed}-$(basename ${inst})
   if [ ! -f ${outFile} ]; then
-    ./bin/aco ${seed} ${inst} ${to} ${ant_to} ${phi} ${n_ants} ${rho} ${outFile}
+    ./bin/aco-greedy ${seed} ${inst} ${to} ${ant_to} ${phi} ${n_ants} ${rho} ${nLocals} ${nhTimeout} ${nhIters} ${outFile}
   fi
 }
 
-export -f runACO
+export -f runACOGreedy
 
-parallel -j ${THREADS} runACO ${outdir} ::: ${instances} ::: ${TIMEOUT} ::: ${ANT_TOS} ::: ${PHIS} ::: ${N_ANTS} ::: ${RHO} ::: ${N_LOCALS} ::: ${NH_TO} ::: ${N_ITERS} ::: ${SEEDS}
+parallel -j ${THREADS} runACOGreedy ${outdir} ::: ${instances} ::: ${TIMEOUT} ::: ${ANT_TOS} ::: ${PHIS} ::: ${N_ANTS} ::: ${RHO} ::: ${N_LOCALS} ::: ${NH_TO} ::: ${N_ITERS} ::: ${SEEDS}
 
 rm -rf $dir
 
@@ -61,7 +61,7 @@ for i in ${instances}; do
         for iters in ${N_ITERS}; do
           printf "${nLocal} ${iters} $(basename $i)" >> ${outdir}/stats-in
           for s in $SEEDS; do
-            printf " ${outdir}/${nh}-${phi}-${nAnts}-${rho}-${nLocal}-${iters}-${s}-$(basename $i)" >> ${outdir}/stats-in
+            printf " ${outdir}/${nh}-${phi}-${N_ANTS}-${RHO}-${nLocal}-${iters}-${s}-$(basename $i)" >> ${outdir}/stats-in
           done
           printf "\n" >> ${outdir}/stats-in
         done
@@ -69,14 +69,3 @@ for i in ${instances}; do
     done
   done
 done
-#printf "" > ${outdir}/stats-in
-#for i in ${instances}; do
-#  printf "$(basename $i)\n" >> ${outdir}/stats-in
-#  printf "${outdir}/fff-$(basename $i)\n" >> ${outdir}/stats-in
-#  printf "upperBoundQ\n${outdir}/tff-$(basename $i)\n" >> ${outdir}/stats-in
-#  printf "upperBoundQR\n${outdir}/ftf-$(basename $i)\n" >> ${outdir}/stats-in
-#  printf "upperBoundQQR\n${outdir}/ttf-$(basename $i)\n" >> ${outdir}/stats-in
-#  printf "upperBoundX\n${outdir}/fft-$(basename $i)\n" >> ${outdir}/stats-in
-#  printf "all\n${outdir}/ttt-$(basename $i)\n" >> ${outdir}/stats-in
-#  printf "\n" >> ${outdir}/stats-in
-#done
